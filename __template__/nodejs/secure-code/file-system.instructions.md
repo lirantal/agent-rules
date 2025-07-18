@@ -2,9 +2,10 @@
 applyTo: "**"
 ---
 
-# Project secure coding guidelines
+# Paths, Files and File System operations security guidelines
 
 ## Constructing File Paths
+
 - You always construct paths using the following 5 steps:
   1. **Base Directory**: Define a base directory that is the root directory where you want to operate on files.
   2. **Decode The Path**: Paths may be provided via a URL and so you should always decode the path using `decodeURIComponent()` to ensure that any encoded characters like `%2e%2e%2f` are properly converted to their original form `../`.
