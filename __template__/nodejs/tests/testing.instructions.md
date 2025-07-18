@@ -19,7 +19,7 @@ This document outlines the rules and guidelines for AI agents generating test co
 
 ### Test Structure and Style
 
-Tests should be organized using `describe` to group related tests and `test` for individual test cases.
+Tests should be organized using `describe` to group related tests and `test` (or its alias `it`) for individual test cases.
 
 #### Basic Structure
 
@@ -80,6 +80,13 @@ describe('Error handling', () => {
       message: 'This is a sync error'
     });
   });
+
+  test('should reject with an error matching a regex', async () => {
+    const asyncOperation = async () => {
+      throw new Error('Course non-existent-course not found');
+    };
+    await assert.rejects(asyncOperation, /Course non-existent-course not found/);
+  });
 });
 ```
 
@@ -90,7 +97,7 @@ Use the `node:assert/strict` module for all assertions. This ensures strict equa
 #### Common Assertions
 
 *   `assert.strictEqual(actual, expected[, message])`: Tests for strict equality (`===`).
-*   `assert.deepStrictEqual(actual, expected[, message])`: Tests for deep equality on objects and arrays.
+*   `assert.deepStrictEqual(actual, expected[, message])`: Tests for deep equality on objects and arrays. Example: `assert.deepStrictEqual([1, 2, 3], [1, 2, 3]);`
 *   `assert.ok(value[, message])`: Tests if `value` is truthy.
 *   `assert.rejects(asyncFn[, error][, message])`: Tests if an `async` function throws an error.
 *   `assert.throws(fn[, error][, message])`: Tests if a synchronous function throws an error.
@@ -109,7 +116,7 @@ import assert from 'node:assert/strict';
 
 // Assume these are external modules with functions we need to mock.
 import * as setupGcloud from '@google-github-actions/setup-cloud-sdk';
-import * as exec from '@actions/exec';
+import *as exec from '@actions/exec';
 
 // This is the function we want to test.
 import { run } from '../src/main.js';
@@ -212,7 +219,8 @@ test('#parseDeliverables', async (suite) => {
     { name: 'single value', input: 'app.yaml', expected: ['app.yaml'] },
     { name: 'space-separated values', input: 'app.yaml foo.yaml', expected: ['app.yaml', 'foo.yaml'] },
     { name: 'comma-separated values', input: 'app.yaml, foo.yaml', expected: ['app.yaml', 'foo.yaml'] },
-    { name: 'mixed separators and newlines', input: 'app.yaml,\nfoo.yaml,   bar.yaml', expected: ['app.yaml', 'foo.yaml', 'bar.yaml'] },
+    { name: 'mixed separators and newlines', input: 'app.yaml,
+foo.yaml,   bar.yaml', expected: ['app.yaml', 'foo.yaml', 'bar.yaml'] },
   ];
 
   for (const tc of cases) {
@@ -227,8 +235,6 @@ test('#parseDeliverables', async (suite) => {
 ### Test Fixtures
 
 For complex tests, especially for CLI tools or APIs, use a `fixtures` directory to store sample input files or data. This keeps your tests clean and focused on the logic being tested.
-
-```
 
 ## Testing Web Servers and APIs
 
@@ -316,7 +322,8 @@ test('should exit with status 0 for valid input', () => {
   const { status, stderr } = spawnSync('my-cli', ['--frail', 'input.txt']);
 
   assert.equal(status, 0);
-  assert.equal(stripVTControlCharacters(String(stderr)), 'input.txt: no issues found\n');
+  assert.equal(stripVTControlCharacters(String(stderr)), 'input.txt: no issues found
+');
 });
 
 test('should exit with status 1 for linting errors', () => {
@@ -325,10 +332,184 @@ test('should exit with status 1 for linting errors', () => {
   assert.equal(status, 1);
   assert.equal(
     stripVTControlCharacters(String(stderr)),
-    'lint-error-fixture.txt\n' +
-      '3:1-3:25 warning Some lint warning\n' +
-      '\n' +
-      '⚠ 1 warning\n'
+    'lint-error-fixture.txt
+' +
+      '3:1-3:25 warning Some lint warning
+' +
+      '
+' +
+      '⚠ 1 warning
+'
   );
+});
+```
+
+## Testing Stateful Services
+
+When building applications, you will often create stateful services—objects or modules that encapsulate both logic and data that changes over time. Testing these services requires verifying two key properties: that state is correctly maintained within an instance, and that state is properly isolated between different instances.
+
+A common pattern is to use a factory function to create service instances, which helps ensure a clean state for each test.
+
+### Verifying State Maintenance and Isolation
+
+The following example demonstrates how to test a simple `counter` service.
+
+*   **State Maintenance**: The first test (`should maintain state across multiple operations`) creates a single service instance and calls its methods multiple times, asserting that the internal state (the counter's value) is updated correctly after each call.
+*   **State Isolation**: The second test (`should not share state between different service instances`) creates two distinct service instances. It performs operations on both and verifies that the state of one instance is not affected by operations on the other. This is a critical test to prevent bugs related to shared or global state.
+
+```javascript
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
+
+// Assume createCounterService is a factory function that returns a new service object.
+// e.g., function createCounterService(options) { let count = 0; return { ... }; }
+import { createCounterService } from './counter-service.js';
+
+describe('Counter Service', () => {
+  it('should maintain state across multiple operations', () => {
+    const service = createCounterService({ delta: 2 });
+
+    service.increment();
+    assert.strictEqual(service.counter(), 2);
+
+    service.increment();
+    assert.strictEqual(service.counter(), 4);
+
+    service.decrement();
+    assert.strictEqual(service.counter(), 2);
+  });
+
+  it('should not share state between different service instances', () => {
+    const service1 = createCounterService({ delta: 3 });
+    const service2 = createCounterService({ delta: 1 });
+
+    service1.increment();
+    service2.increment();
+
+    assert.strictEqual(service1.counter(), 3);
+    assert.strictEqual(service2.counter(), 1);
+
+    service1.increment();
+
+    assert.strictEqual(service1.counter(), 6);
+    assert.strictEqual(service2.counter(), 1);
+  });
+});
+```
+
+## Testing Console Output
+
+For many applications, especially command-line tools or logging libraries, a primary output is text printed to the console. Testing this requires capturing `console.log`, `console.error`, etc., so you can assert on their output.
+
+### Manual Console Capture with `try...finally`
+
+You can manually capture console output by replacing the `console.log` method with a mock. It is critical to use a `try...finally` block to ensure the original `console.log` is restored after the test, even if an assertion fails. This prevents mocks from leaking between tests.
+
+```javascript
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
+
+// Assume a utility that captures and restores the console.
+import { captureConsole, uncaptureConsole, consoleOutputAsString } from '../src/console-testkit.js';
+
+describe('Manual Console Capture', () => {
+  it('should capture log and error output', () => {
+    const consoleCapturer = captureConsole();
+    try {
+      console.log('hello world');
+      console.error('oh noes');
+      assert.strictEqual(consoleOutputAsString({ consoleCapturer }), 'hello world
+oh noes');
+    } finally {
+      uncaptureConsole({ consoleCapturer });
+    }
+  });
+});
+```
+
+### Automated Capture with Test Hooks (Recommended)
+
+A more robust and elegant solution is to create a helper function that uses the test runner's hooks (`beforeEach`, `afterEach`) to automatically manage the capture and release of the console for an entire test suite. This reduces boilerplate and eliminates the risk of forgetting to restore the console.
+
+```javascript
+import { describe, it, beforeEach, afterEach } from 'node:test';
+import assert from 'node:assert';
+
+// Assume a testkit that integrates with the test runner's hooks.
+import { captureConsoleInTest } from '../src/console-testkit.js';
+
+describe('Automated Console Capture', () => {
+  // This helper sets up the hooks for the entire suite.
+  const { consoleOutputAsString } = captureConsoleInTest(beforeEach, afterEach);
+
+  it('should capture output for the first test', () => {
+    console.log('this is test one');
+    assert.strictEqual(consoleOutputAsString(), 'this is test one');
+  });
+
+  it('should have a clean capture for the second test', () => {
+    // The output from the previous test is gone because afterEach cleaned it up.
+    console.log('this is test two');
+    assert.strictEqual(consoleOutputAsString(), 'this is test two');
+  });
+});
+```
+
+## Testing Side Effects and State Changes
+
+When testing functions or methods that modify the state of an object or an external system (e.g., adding an item to a list, updating a database record), it's crucial to verify these side effects. This often involves performing an action and then querying the system's state to assert that the expected changes have occurred.
+
+### Verifying State Modification and Array Membership
+
+The following example demonstrates how to test a service that manages participants in a group.
+
+*   **Verifying Addition**: The first test adds a new participant and then asserts that the total number of participants has increased and that the new participant is present in the list.
+*   **Testing Idempotency/Edge Cases**: The second test attempts to add an existing participant, verifying that the system handles duplicates correctly (e.g., by not adding them again).
+*   **Error Handling for Invalid State**: The third test ensures that an error is thrown when attempting to modify a non-existent group.
+
+```javascript
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
+
+// Assume createTestService is a factory function that returns a service object
+// with methods like addParticipantToGroup and _test_listParticipantsInGroup.
+import { createTestService } from './test-service.js';
+
+describe('addParticipantToGroup', () => {
+  const testGroupId = 'group-123';
+  const testParticipant1 = 'participant-A';
+  const testParticipant2 = 'participant-B';
+
+  it('should add a new participant to the group', async () => {
+    const service = createTestService();
+    const newParticipant = 'new-participant';
+
+    await service.addParticipantToGroup(testGroupId, newParticipant);
+
+    const participants = await service._test_listParticipantsInGroup(testGroupId);
+    assert.strictEqual(participants.length, 3); // Assuming initial state has 2 participants
+    assert.ok(participants.includes(newParticipant));
+  });
+
+  it('should not add duplicate participant to the group', async () => {
+    const service = createTestService();
+
+    // Add an existing participant
+    await service.addParticipantToGroup(testGroupId, testParticipant1);
+
+    const participants = await service._test_listParticipantsInGroup(testGroupId);
+    assert.strictEqual(participants.length, 2); // Should remain 2 if duplicate is not added
+    assert.strictEqual(participants.filter((p) => p === testParticipant1).length, 1);
+  });
+
+  it('should throw error if group not found', async () => {
+    const service = createTestService();
+    const nonExistentGroup = 'non-existent-group';
+
+    await assert.rejects(
+      () => service.addParticipantToGroup(nonExistentGroup, testParticipant1),
+      /Group .* not found/,
+    );
+  });
 });
 ```
