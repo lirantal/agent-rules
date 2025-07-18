@@ -17,6 +17,162 @@ This document outlines the rules and guidelines for AI agents generating test co
 5.  **Asynchronous Focus:** Tests should be written with an `async`-first mindset, effectively handling promises and asynchronous operations.
 6.  **Clarity and Readability:** Tests should be easy to understand. Use descriptive names for `describe` blocks and `test` cases.
 
+### Descriptive Test Naming (Three-Part Structure)
+
+A well-named test clearly communicates its purpose, making test reports more informative and debugging easier for anyone, regardless of their familiarity with the codebase. Adopt a three-part structure for your test names:
+
+1.  **What is being tested?** (The unit under test, e.g., `ProductsService.addNewProduct`)
+2.  **Under what circumstances/scenario?** (The specific conditions, e.g., `no price is passed to the method`)
+3.  **What is the expected result?** (The outcome, e.g., `the new product is not approved`)
+
+This structure ensures that a failing test immediately tells you *what* broke, *when* it broke, and *what the expected behavior was*.
+
+**Example:**
+
+```javascript
+// 1. unit under test
+describe('Products Service', function() {
+  describe('Add new product', function() {
+    // 2. scenario and 3. expectation
+    it('When no price is specified, then the product status is pending approval', () => {
+      const newProduct = new ProductService().add();
+      assert.strictEqual(newProduct.status, 'pendingApproval');
+    });
+  });
+});
+```
+
+**Avoid:** Test names like "Add product" which provide insufficient information upon failure.
+
+### Structure Tests by the AAA Pattern
+
+To ensure clarity and maintainability, structure your tests using the Arrange, Act, and Assert (AAA) pattern. This pattern divides each test into three distinct, well-separated sections, making the test's purpose and flow immediately clear to anyone reading it:
+
+1.  **Arrange:** This section includes all the setup code necessary to bring the system to the specific scenario the test aims to simulate. This might involve instantiating the unit under test, setting up initial data (e.g., adding database records), or configuring mocks/stubs on dependencies. The goal is to prepare everything needed for the action.
+
+2.  **Act:** This is where you execute the unit under test. Typically, this involves a single line of code that invokes the method or function being tested.
+
+3.  **Assert:** In this final section, you verify that the outcome of the 'Act' phase matches your expectations. This usually involves one or more assertion statements that check the return value, the state of the system, or interactions with mocked dependencies.
+
+Following the AAA pattern reduces cognitive load when reading tests, making them easier to understand, debug, and maintain.
+
+**Example:**
+
+```javascript
+describe("Customer classifier", () => {
+  test("When customer spent more than 500$, should be classified as premium", (t) => {
+    // Arrange
+    const customerToClassify = { spent: 505, joined: new Date(), id: 1 };
+    const dataAccess = { getCustomer: () => {} }; // Mock object for demonstration
+    t.mock.method(dataAccess, "getCustomer", () => ({ id: 1, classification: "regular" }));
+    const customerClassifier = { classifyCustomer: (customer) => {
+      if (customer.spent > 500) return "premium";
+      return "regular";
+    }};
+
+    // Act
+    const receivedClassification = customerClassifier.classifyCustomer(customerToClassify);
+
+    // Assert
+    assert.strictEqual(receivedClassification, "premium");
+  });
+});
+```
+
+### Describe Expectations in a Product Language (BDD-style Assertions)
+
+Writing tests in a declarative style, often referred to as Behavior-Driven Development (BDD) style, makes them highly readable and immediately understandable. The goal is to express expectations in a human-like language, avoiding complex conditional logic within assertions.
+
+While `node:assert` is more imperative than some third-party assertion libraries, you can still strive for clarity by combining assertions and using helper functions where appropriate to make the intent explicit.
+
+**Example:**
+
+```javascript
+it("When asking for an admin, ensure only ordered admins in results", () => {
+  // Arrange
+  const getUsers = ({ adminOnly }) => {
+    const users = ["admin1", "user1", "admin2"];
+    if (adminOnly) {
+      return users.filter(user => user.startsWith("admin")).sort();
+    }
+    return users;
+  };
+
+  // Act
+  const allAdmins = getUsers({ adminOnly: true });
+
+  // Assert
+  // Using a combination of assertions to achieve a BDD-like clarity
+  assert.deepStrictEqual(allAdmins, ["admin1", "admin2"], "Should include ordered admins");
+  assert.ok(!allAdmins.includes("user1"), "Should not include regular users");
+});
+```
+
+### Describe Expectations in a Product Language (BDD-style Assertions)
+
+Writing tests in a declarative style, often referred to as Behavior-Driven Development (BDD) style, makes them highly readable and immediately understandable. The goal is to express expectations in a human-like language, avoiding complex conditional logic within assertions.
+
+While `node:assert` is more imperative than some third-party assertion libraries, you can still strive for clarity by combining assertions and using helper functions where appropriate to make the intent explicit.
+
+**Example:**
+
+```javascript
+it("When asking for an admin, ensure only ordered admins in results", () => {
+  // Arrange
+  const getUsers = ({ adminOnly }) => {
+    const users = ["admin1", "user1", "admin2"];
+    if (adminOnly) {
+      return users.filter(user => user.startsWith("admin")).sort();
+    }
+    return users;
+  };
+
+  // Act
+  const allAdmins = getUsers({ adminOnly: true });
+
+  // Assert
+  // Using a combination of assertions to achieve a BDD-like clarity
+  assert.deepStrictEqual(allAdmins, ["admin1", "admin2"], "Should include ordered admins");
+  assert.ok(!allAdmins.includes("user1"), "Should not include regular users");
+});
+```
+
+### Categorize Tests Under at Least 2 Levels
+
+To improve the readability, navigation, and reporting of your test suite, it's highly recommended to categorize your tests using at least two levels of `describe` blocks. This structure helps an occasional visitor quickly understand the requirements (as tests serve as excellent documentation) and the various scenarios being tested.
+
+A common approach is to use the first `describe` block for the name of the unit under test and the second `describe` block for an additional level of categorization, such as a specific scenario or custom categories. This practice significantly enhances test reports, allowing readers to easily infer test categories, delve into desired sections, and correlate failing tests with specific functionalities. It also makes it much easier for developers to navigate through the code of a test suite with many tests.
+
+**Example:**
+
+```javascript
+// Unit under test
+describe("Transfer service", () => {
+  // Scenario
+  describe("When no credit", () => {
+    // Expectation
+    test("Then the response status should decline", () => {
+      // Test implementation here
+    });
+
+    // Expectation
+    test("Then it should send email to admin", () => {
+      // Test implementation here
+    });
+  });
+});
+```
+
+### Stick to Black-Box Testing: Test Only Public Methods
+
+Focus on testing the public interface and observable behavior of your code, rather than its internal implementation details. This approach, often called "black-box testing" or "behavioral testing," offers several significant advantages:
+
+*   **Reduced Maintenance Overhead:** Tests that delve into internal implementation (`white-box testing`) are fragile. Minor refactors to private methods, even if they don't change the public behavior, can cause these tests to break, leading to unnecessary maintenance burden.
+*   **Implicit Testing of Internals:** When you thoroughly test the public behavior of a component, its private implementation is implicitly tested. If the public behavior is correct, it means the internal workings are also correct.
+*   **Focus on Requirements:** Black-box testing encourages you to think about your code from the perspective of its users and the requirements it fulfills, rather than getting bogged down in implementation specifics.
+
+By adhering to this principle, your tests will break only when there's a genuine problem with the component's external behavior, making them more robust and valuable.
+
 ### Test Structure and Style
 
 Tests should be organized using `describe` to group related tests and `test` (or its alias `it`) for individual test cases.
@@ -169,6 +325,12 @@ test('should set the project ID flag when a project_id is provided', async (t) =
   assert.ok(firstCall.arguments[1].includes('my-test-project'));
 });
 ```
+
+#### Mock Isolation and Cleanup
+
+Ensuring test isolation is paramount for reliable and maintainable test suites. When using `t.mock.method()` within a `test` function or a `suite.test` function, `node:test` automatically handles the cleanup and restoration of the original method after the test completes. This means that mocks created within the scope of a single test will not affect subsequent tests, preventing unintended side effects and ensuring each test runs in a clean environment.
+
+While `node:test` provides this automatic cleanup, it's still good practice to be mindful of any global state or external resources that your mocks might interact with and manage them explicitly using `beforeEach` and `afterEach` hooks if necessary (as demonstrated in the "Setup and Teardown" section).
 
 ### Setup and Teardown
 
