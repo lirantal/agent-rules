@@ -146,7 +146,7 @@ test('spies on an object method', (t) => {
 Use `before`, `after`, `beforeEach`, and `afterEach` for setting up and tearing down test conditions.
 
 ```javascript
-import { describe, it, before, after, beforeEach, afterEach } from 'node:test';
+import { describe, test, before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
 describe('tests with hooks', () => {
@@ -155,18 +155,22 @@ describe('tests with hooks', () => {
   beforeEach(() => console.log('about to run a test'));
   afterEach(() => console.log('finished running a test'));
 
-  it('is a subtest', () => {
+  test('is a subtest', () => {
     assert.ok('some relevant assertion here');
   });
 });
 ```
 
+### Test Fixtures
+
+For complex tests, especially for CLI tools or APIs, use a `fixtures` directory to store sample input files or data. This keeps your tests clean and focused on the logic being tested.
+
 ## Testing Web Servers and APIs
 
-When testing web servers, use a mocking library to simulate HTTP requests and responses.
+When testing web servers, start the server on a random port and use `fetch` to make requests to it.
 
 ```javascript
-import { describe, it, before, after } from 'node:test';
+import { describe, test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 
@@ -191,7 +195,7 @@ describe('API tests', () => {
     server.close();
   });
 
-  it('should return a 200 OK with a JSON payload', async () => {
+  test('should return a 200 OK with a JSON payload', async () => {
     const response = await fetch(`http://localhost:${port}`);
     assert.strictEqual(response.status, 200);
     const body = await response.json();
@@ -202,20 +206,31 @@ describe('API tests', () => {
 
 ## Testing Commands and CLI Tools
 
-To test command-line tools, use `node:child_process` to execute the CLI and assert on its output.
+To test command-line tools, use `node:child_process` to execute the CLI and assert on its output. Use `util.promisify` to avoid callback-based APIs.
 
 ```javascript
 import { exec } from 'node:child_process';
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { promisify } from 'node:util';
+import path from 'node:path';
 
 const execPromise = promisify(exec);
 
 describe('CLI tool tests', () => {
+  const cliPath = path.resolve('./my-cli.js');
+
   test('should output the correct version', async () => {
-    const { stdout } = await execPromise('node my-cli.js --version');
+    const { stdout } = await execPromise(`node ${cliPath} --version`);
     assert.strictEqual(stdout.trim(), '1.0.0');
+  });
+
+  test('should output an error message for invalid input', async () => {
+    try {
+      await execPromise(`node ${cliPath} --invalid-command`);
+    } catch (error) {
+      assert.match(error.stderr, /Unknown command: --invalid-command/);
+    }
   });
 });
 ```
