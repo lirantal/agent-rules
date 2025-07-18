@@ -97,73 +97,138 @@ Use the `node:assert/strict` module for all assertions. This ensures strict equa
 
 ### Mocking and Stubbing
 
-Use the built-in mocking capabilities of `node:test` to isolate components and control dependencies.
+Use the built-in mocking capabilities of `node:test` to isolate components and control dependencies. The `t.mock.method()` function is a powerful tool for replacing the implementation of a method on any object, including imported modules.
 
-#### Mocking Functions
+#### Mocking Module Methods
 
-```javascript
-import { test, mock } from 'node:test';
-import assert from 'node:assert/strict';
-
-test('spies on a function', () => {
-  const sum = mock.fn((a, b) => {
-    return a + b;
-  });
-
-  assert.strictEqual(sum.mock.callCount(), 0);
-  assert.strictEqual(sum(3, 4), 7);
-  assert.strictEqual(sum.mock.callCount(), 1);
-
-  const call = sum.mock.calls[0];
-  assert.deepStrictEqual(call.arguments, [3, 4]);
-  assert.strictEqual(call.result, 7);
-});
-```
-
-#### Mocking Object Methods
+A common use case is to mock dependencies that are imported from other modules. This allows you to control their behavior and prevent external calls (e.g., to APIs or file systems) during tests.
 
 ```javascript
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-test('spies on an object method', (t) => {
-  const number = {
-    value: 5,
-    add(a) {
-      return this.value + a;
-    },
-  };
+// Assume these are external modules with functions we need to mock.
+import * as setupGcloud from '@google-github-actions/setup-cloud-sdk';
+import * as exec from '@actions/exec';
 
-  t.mock.method(number, 'add');
-  assert.strictEqual(number.add.mock.callCount(), 0);
-  assert.strictEqual(number.add(3), 8);
-  assert.strictEqual(number.add.mock.callCount(), 1);
+// This is the function we want to test.
+import { run } from '../src/main.js';
+
+test('should use cached gcloud SDK if already installed', async (t) => {
+  // Mock the functions from the imported modules.
+  t.mock.method(setupGcloud, 'isInstalled', () => true);
+  const installGcloudSDKMock = t.mock.method(setupGcloud, 'installGcloudSDK');
+  t.mock.method(exec, 'getExecOutput', async () => ({ exitCode: 0, stdout: '{}' }));
+
+  await run();
+
+  // Assert that the mocked function was NOT called.
+  assert.strictEqual(installGcloudSDKMock.mock.callCount(), 0);
+});
+```
+
+#### Centralized Mocking with Helper Functions
+
+For test suites with many shared dependencies, creating a helper function to set up all the default mocks can significantly reduce boilerplate and improve readability.
+
+```javascript
+import { mock } from 'node:test';
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
+
+// A helper function that sets up all common mocks.
+const setupMocks = (t, overrideInputs = {}) => {
+  const inputs = { ...overrideInputs };
+
+  return {
+    getInput: t.mock.method(core, 'getInput', (name) => inputs[name]),
+    getExecOutput: t.mock.method(exec, 'getExecOutput', async () => ({
+      exitCode: 0,
+      stderr: '',
+      stdout: '{}',
+    })),
+    // ... other common mocks
+  };
+};
+
+test('should set the project ID flag when a project_id is provided', async (t) => {
+  const mocks = setupMocks(t, { project_id: 'my-test-project' });
+
+  await run(); // The function being tested.
+
+  // Check if the mocked `getExecOutput` was called with the correct arguments.
+  const firstCall = mocks.getExecOutput.mock.calls[0];
+  assert.ok(firstCall.arguments[1].includes('--project'));
+  assert.ok(firstCall.arguments[1].includes('my-test-project'));
 });
 ```
 
 ### Setup and Teardown
 
-Use `before`, `after`, `beforeEach`, and `afterEach` for setting up and tearing down test conditions.
+Use `before`, `after`, `beforeEach`, and `afterEach` for setting up and tearing down test conditions. These "hooks" are essential for managing resources like temporary files or database connections, ensuring that each test runs in a clean, isolated environment.
+
+The `suite` object, available in the `test` function's callback, is a great way to apply hooks to a specific group of tests.
 
 ```javascript
-import { describe, test, before, after, beforeEach, afterEach } from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
-describe('tests with hooks', () => {
-  before(() => console.log('about to run some tests'));
-  after(() => console.log('finished running tests'));
-  beforeEach(() => console.log('about to run a test'));
-  afterEach(() => console.log('finished running a test'));
+test('File system operations', { concurrency: true }, async (suite) => {
+  let tempDir;
 
-  test('is a subtest', () => {
-    assert.ok('some relevant assertion here');
+  // Create a temporary directory before each test in this suite.
+  suite.beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join('test-fixtures-'));
   });
+
+  // Clean up the temporary directory after each test.
+  suite.afterEach(async () => {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  });
+
+  suite.test('should write a file to the temp directory', async () => {
+    const filePath = path.join(tempDir, 'my-file.txt');
+    await fs.writeFile(filePath, 'hello world');
+    const content = await fs.readFile(filePath, 'utf-8');
+    assert.strictEqual(content, 'hello world');
+  });
+});
+```
+
+### Data-Driven (Table-Driven) Tests
+
+For functions that need to be tested with a variety of different inputs, a data-driven or table-driven approach is highly effective. This pattern involves creating an array of test cases, where each case defines the inputs and the expected outcome. You then loop over the array and run a sub-test for each case. This makes your tests concise, readable, and easy to extend.
+
+```javascript
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { parseDeliverables } from '../src/main.js';
+
+test('#parseDeliverables', async (suite) => {
+  const cases = [
+    { name: 'empty string', input: '', expected: [] },
+    { name: 'single value', input: 'app.yaml', expected: ['app.yaml'] },
+    { name: 'space-separated values', input: 'app.yaml foo.yaml', expected: ['app.yaml', 'foo.yaml'] },
+    { name: 'comma-separated values', input: 'app.yaml, foo.yaml', expected: ['app.yaml', 'foo.yaml'] },
+    { name: 'mixed separators and newlines', input: 'app.yaml,\nfoo.yaml,   bar.yaml', expected: ['app.yaml', 'foo.yaml', 'bar.yaml'] },
+  ];
+
+  for (const tc of cases) {
+    await suite.test(tc.name, () => {
+      const result = parseDeliverables(tc.input);
+      assert.deepStrictEqual(result, tc.expected);
+    });
+  }
 });
 ```
 
 ### Test Fixtures
 
 For complex tests, especially for CLI tools or APIs, use a `fixtures` directory to store sample input files or data. This keeps your tests clean and focused on the logic being tested.
+
+```
 
 ## Testing Web Servers and APIs
 
@@ -206,7 +271,7 @@ describe('API tests', () => {
 
 ## Testing Commands and CLI Tools
 
-To test command-line tools, use `node:child_process` to execute the CLI and assert on its output. Use `util.promisify` to avoid callback-based APIs.
+To test command-line tools, use `node:child_process` to execute the CLI and assert on its output. For asynchronous operations where you need to capture streamed output or handle more complex interactions, using `exec` with `util.promisify` is a solid approach.
 
 ```javascript
 import { exec } from 'node:child_process';
@@ -217,7 +282,7 @@ import path from 'node:path';
 
 const execPromise = promisify(exec);
 
-describe('CLI tool tests', () => {
+describe('CLI tool tests with exec', () => {
   const cliPath = path.resolve('./my-cli.js');
 
   test('should output the correct version', async () => {
@@ -232,5 +297,38 @@ describe('CLI tool tests', () => {
       assert.match(error.stderr, /Unknown command: --invalid-command/);
     }
   });
+});
+```
+
+Alternatively, for synchronous command execution, `spawnSync` provides a more direct API. This is particularly useful for testing specific exit codes and exact output without needing `try/catch` blocks for error cases.
+
+When asserting on `stdout` or `stderr`, it's a good practice to use `node:util.stripVTControlCharacters` to remove any ANSI escape codes (e.g., for color) from the output. This makes assertions more robust.
+
+```javascript
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { test } from 'node:test';
+import { stripVTControlCharacters } from 'node:util';
+
+test('should exit with status 0 for valid input', () => {
+  // Assuming 'my-cli' is an executable command.
+  // The arguments are passed as an array.
+  const { status, stderr } = spawnSync('my-cli', ['--frail', 'input.txt']);
+
+  assert.equal(status, 0);
+  assert.equal(stripVTControlCharacters(String(stderr)), 'input.txt: no issues found\n');
+});
+
+test('should exit with status 1 for linting errors', () => {
+  const { status, stderr } = spawnSync('my-cli', ['lint-error-fixture.txt']);
+
+  assert.equal(status, 1);
+  assert.equal(
+    stripVTControlCharacters(String(stderr)),
+    'lint-error-fixture.txt\n' +
+      '3:1-3:25 warning Some lint warning\n' +
+      '\n' +
+      '⚠ 1 warning\n'
+  );
 });
 ```
