@@ -93,5 +93,8 @@
     "**/*.{js,json}": [
       "npm run lint:fix"
     ]
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.11.0"
   }
 }
