@@ -4,7 +4,7 @@
   "description": "Rules and instructions for agentic coding tools like Cursor, Claude CLI, Gemini CLI, Qodo, Cline and more",
   "types": "dist/main.d.ts",
   "type": "module",
-  "bin": "./dist/bin/cli.cjs",
+  "bin": "./dist/bin/cli.mjs",
   "exports": {
     ".": {
       "import": {
@@ -30,6 +30,7 @@
   "files": [
     "dist",
     "src",
+    "__template__",
     "bin"
   ],
   "scripts": {
