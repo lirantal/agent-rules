@@ -29,8 +29,9 @@ const mapAiAppsToDirectories: AiAppsMap = {
 }
 
 // Simple path resolution because templates are copied to dist during build
-// see package.json scripts for the build process
-function getCurrentFileDirectory (): string {
+// see package.json scripts for the build process but we also want to support
+// running from source in dev `npm run start` where this file lives in src/
+function resolvePackageRootDirectoryForTemplates (): string {
   let guessedDirName: string = ''
   try {
     if (typeof import.meta !== 'undefined' && import.meta.url) {
@@ -48,7 +49,10 @@ function getCurrentFileDirectory (): string {
 
   // If we're in dist/bin, go up one level to dist
   // If we're already in dist, stay there
-  if (guessedDirName.endsWith('dist/bin') || guessedDirName.endsWith('dist\\bin')) {
+  if (guessedDirName.endsWith('src')) {
+    // If we're in src, we need to go up one level to root
+    return path.resolve(guessedDirName, '..')
+  } else if (guessedDirName.endsWith('dist/bin') || guessedDirName.endsWith('dist\\bin')) {
     return path.resolve(guessedDirName, '..')
   } else {
     return guessedDirName
@@ -67,7 +71,7 @@ export function getAiAppDirectory (aiApp: string): AiAppConfig {
 export async function resolveTemplateDirectory (scaffoldInstructions: ScaffoldInstructions): Promise<string> {
   const { codeLanguage, codeTopic } = scaffoldInstructions
 
-  const currentFileDirectory = getCurrentFileDirectory()
+  const currentFileDirectory = resolvePackageRootDirectoryForTemplates()
   const templateDirectory = path.join(currentFileDirectory, templateRoot, codeLanguage, codeTopic)
   const resolvedTemplateDirectory = path.resolve(templateDirectory)
 

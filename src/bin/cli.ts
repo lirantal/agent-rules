@@ -62,7 +62,7 @@ async function main () {
     await init()
   } catch (error) {
     debug('Full error details:', error)
-    console.log('Shiver me timbers!')
+    console.log('\nShiver me timbers!\n')
 
     // eslint-disable-next-line n/no-process-exit
     process.exit(1)
