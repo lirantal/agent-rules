@@ -173,6 +173,39 @@ Focus on testing the public interface and observable behavior of your code, rath
 
 By adhering to this principle, your tests will break only when there's a genuine problem with the component's external behavior, making them more robust and valuable.
 
+#### ❌ Anti-Pattern: Testing Implementation Details
+
+**Never** write tests that read source code files and make string-based assertions about their contents. This creates brittle, meaningless tests:
+
+```javascript
+// BAD: This is fragile and tests implementation, not behavior
+test('should have correct imports', async () => {
+  const sourceCode = await fs.readFile('src/module.js', 'utf-8')
+  assert.ok(sourceCode.includes('import express'), 'Should import express')
+  assert.ok(sourceCode.includes('function init'), 'Should have init function')
+})
+```
+
+#### ✅ Better Approach: Test Actual Behavior
+
+Instead, test the public API and actual functionality:
+
+```javascript
+// GOOD: This tests actual behavior and functionality
+test('should handle HTTP requests correctly', async () => {
+  const app = createApp()
+  const response = await request(app).get('/api/health')
+  assert.strictEqual(response.status, 200)
+  assert.strictEqual(response.body.status, 'ok')
+})
+
+test('should initialize with default configuration', () => {
+  const service = createService()
+  assert.ok(service.isInitialized())
+  assert.strictEqual(service.getPort(), 3000)
+})
+```
+
 ### Test Structure and Style
 
 Tests should be organized using `describe` to group related tests and `test` (or its alias `it`) for individual test cases.
