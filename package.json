@@ -35,7 +35,8 @@
   ],
   "scripts": {
     "start": "node --import tsx src/bin/cli.ts",
-    "build": "tsc && tsup",
+    "build": "tsc && tsup && npm run build:copy-templates",
+    "build:copy-templates": "cp -r __template__ dist/",
     "lint": "eslint . && npm run lint:lockfile",
     "lint:fix": "eslint . --fix",
     "lint:lockfile": "lockfile-lint --path package-lock.json --validate-https --allowed-hosts npm yarn",

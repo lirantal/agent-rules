@@ -20,8 +20,32 @@ type AiAppsMap = {
 
 const debug = debuglog('agent-rules')
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+// Simple path resolution - templates are copied to dist during build
+function getCurrentFileDirectory (): string {
+  let guessedDirName: string = ''
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta.url) {
+      // ESM environment - templates are in dist/__template__
+      const __filename = fileURLToPath(import.meta.url)
+      guessedDirName = path.dirname(__filename)
+    } else {
+      guessedDirName = __dirname
+    }
+  } catch (error) {
+    // CJS fallback - assume we're in a distributed package
+    // In CJS, we don't have import.meta, so use __dirname
+    guessedDirName = __dirname
+  }
+
+  // If we're in dist/bin, go up one level to dist
+  // If we're already in dist, stay there
+  if (guessedDirName.endsWith('dist/bin') || guessedDirName.endsWith('dist\\bin')) {
+    return path.resolve(guessedDirName, '..')
+  } else {
+    return guessedDirName
+  }
+}
+
 const templateRoot = '__template__'
 
 const mapAiAppsToDirectories: AiAppsMap = {
@@ -43,7 +67,7 @@ export function getAiAppDirectory (aiApp: string): AiAppConfig {
 export function resolveTemplateDirectory (scaffoldInstructions: ScaffoldInstructions): string {
   const { codeLanguage, codeTopic } = scaffoldInstructions
 
-  const currentFileDirectory = path.resolve(__dirname, '..', '..')
+  const currentFileDirectory = getCurrentFileDirectory()
   const templateDirectory = path.join(currentFileDirectory, templateRoot, codeLanguage, codeTopic)
 
   return templateDirectory
