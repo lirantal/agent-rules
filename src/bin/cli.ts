@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
 import { intro, outro, select } from '@clack/prompts'
-import { styleText } from 'node:util'
-import { debuglog } from 'node:util'
+import { styleText, debuglog } from 'node:util'
 import { scaffoldAiAppInstructions } from '../main.js'
 
 const debug = debuglog('agent-rules')
