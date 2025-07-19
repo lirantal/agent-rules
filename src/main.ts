@@ -19,8 +19,17 @@ type AiAppsMap = {
 }
 
 const debug = debuglog('agent-rules')
+const templateRoot = '__template__'
 
-// Simple path resolution - templates are copied to dist during build
+const mapAiAppsToDirectories: AiAppsMap = {
+  'github-copilot': {
+    directory: '.github/instructions',
+    filesSuffix: '.instructions.md',
+  }
+}
+
+// Simple path resolution because templates are copied to dist during build
+// see package.json scripts for the build process
 function getCurrentFileDirectory (): string {
   let guessedDirName: string = ''
   try {
@@ -43,15 +52,6 @@ function getCurrentFileDirectory (): string {
     return path.resolve(guessedDirName, '..')
   } else {
     return guessedDirName
-  }
-}
-
-const templateRoot = '__template__'
-
-const mapAiAppsToDirectories: AiAppsMap = {
-  'github-copilot': {
-    directory: '.github/instructions',
-    filesSuffix: '.instructions.md',
   }
 }
 
