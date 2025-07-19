@@ -1,6 +1,6 @@
 {
   "name": "agent-rules",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "Rules and instructions for agentic coding tools like Cursor, Claude CLI, Gemini CLI, Qodo, Cline and more",
   "types": "dist/main.d.ts",
   "type": "module",
