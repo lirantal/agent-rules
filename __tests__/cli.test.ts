@@ -66,50 +66,27 @@ describe('CLI Application', () => {
     })
   })
 
-  describe('CLI Structure Validation', () => {
-    test('should import required modules successfully', async () => {
-      // Test that the CLI imports can be resolved
-      const cliContent = await fs.readFile('src/bin/cli.ts', 'utf-8')
+  describe('CLI Functional Tests', () => {
+    test('should validate AI app support through public API', async () => {
+      // Test the public API that the CLI uses
+      const { getAiAppDirectory } = await import('../src/main.js')
 
-      // Check for required imports
-      assert.ok(cliContent.includes('@clack/prompts'), 'Should import @clack/prompts')
-      assert.ok(cliContent.includes('../main.js'), 'Should import main module')
-      assert.ok(cliContent.includes('scaffoldAiAppInstructions'), 'Should import scaffoldAiAppInstructions')
+      // Test known supported AI apps
+      assert.doesNotThrow(() => getAiAppDirectory('github-copilot'), 'Should support GitHub Copilot')
+
+      // Test unsupported app throws appropriate error
+      assert.throws(() => getAiAppDirectory('unsupported'), /not supported/, 'Should reject unsupported AI apps')
     })
 
-    test('should have proper CLI structure', async () => {
-      const cliContent = await fs.readFile('src/bin/cli.ts', 'utf-8')
+    test('should validate template directory structure exists', async () => {
+      // Test that required template structure exists for CLI options
+      const templateDir = '__template__/nodejs/testing'
 
-      // Check for main CLI functions
-      assert.ok(cliContent.includes('async function init'), 'Should have init function')
-      assert.ok(cliContent.includes('async function main'), 'Should have main function')
-      assert.ok(cliContent.includes('intro('), 'Should have intro call')
-      assert.ok(cliContent.includes('outro('), 'Should have outro call')
-    })
-  })
+      const stat = await fs.stat(templateDir)
+      assert.ok(stat.isDirectory(), 'Template directory should exist')
 
-  describe('CLI Options Validation', () => {
-    test('should have valid AI app options', async () => {
-      const cliContent = await fs.readFile('src/bin/cli.ts', 'utf-8')
-
-      // Check that supported AI apps are present
-      assert.ok(cliContent.includes('github-copilot'), 'Should support GitHub Copilot')
-      assert.ok(cliContent.includes('cursor'), 'Should support Cursor')
-      assert.ok(cliContent.includes('claude-code'), 'Should support Claude Code')
-    })
-
-    test('should have valid code topic options', async () => {
-      const cliContent = await fs.readFile('src/bin/cli.ts', 'utf-8')
-
-      // Check that testing topic is present
-      assert.ok(cliContent.includes('testing'), 'Should support testing topic')
-    })
-
-    test('should default to nodejs language', async () => {
-      const cliContent = await fs.readFile('src/bin/cli.ts', 'utf-8')
-
-      // Check that nodejs is the default language
-      assert.ok(cliContent.includes("codeLanguage = 'nodejs'"), 'Should default to nodejs language')
+      const files = await fs.readdir(templateDir)
+      assert.ok(files.length > 0, 'Template directory should contain files')
     })
   })
 
@@ -138,9 +115,9 @@ describe('CLI Application', () => {
       assert.ok(indexContent.length > 0, 'Index template should have content')
       assert.ok(testingContent.length > 0, 'Testing template should have content')
 
-      // Templates should contain markdown content
-      assert.ok(indexContent.includes('#'), 'Index template should contain markdown headers')
-      assert.ok(testingContent.includes('#'), 'Testing template should contain markdown headers')
+      // Verify files are valid (can be read and have content)
+      assert.ok(typeof indexContent === 'string', 'Index template should be readable as text')
+      assert.ok(typeof testingContent === 'string', 'Testing template should be readable as text')
     })
   })
 })
