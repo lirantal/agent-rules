@@ -54,7 +54,7 @@ async function init () {
 
   await scaffoldAiAppInstructions(templateChoices)
 
-  outro('good luck with your vibe coding, captain 🫡')
+  outro('Aye Captain, godspeed with yar vibe coding 🫡')
 }
 
 async function main () {
