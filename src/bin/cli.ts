@@ -57,4 +57,16 @@ async function init () {
   outro('good luck with your vibe coding, captain 🫡')
 }
 
-init()
+async function main () {
+  try {
+    await init()
+  } catch (error) {
+    debug('Full error details:', error)
+    console.log('Shiver me timbers!')
+
+    // eslint-disable-next-line n/no-process-exit
+    process.exit(1)
+  }
+}
+
+main()
