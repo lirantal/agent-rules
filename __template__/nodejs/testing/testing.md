@@ -171,6 +171,8 @@ Focus on testing the public interface and observable behavior of your code, rath
 *   **Implicit Testing of Internals:** When you thoroughly test the public behavior of a component, its private implementation is implicitly tested. If the public behavior is correct, it means the internal workings are also correct.
 *   **Focus on Requirements:** Black-box testing encourages you to think about your code from the perspective of its users and the requirements it fulfills, rather than getting bogged down in implementation specifics.
 
+Important: never write tests that read source code files and make string-based assertions about their contents. This creates brittle, meaningless tests that are tightly coupled to the implementation details rather than the behavior of the code.
+
 By adhering to this principle, your tests will break only when there's a genuine problem with the component's external behavior, making them more robust and valuable.
 
 #### ❌ Anti-Pattern: Testing Implementation Details
