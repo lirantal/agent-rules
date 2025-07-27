@@ -5,7 +5,7 @@
 </h1>
 
 <p align="center">
-  Rules and instructions for agentic coding tools like Cursor, Claude CLI, Gemini CLI, Qodo, Cline and more
+  Rules and instructions for agentic coding tools like Cursor, GitHub Copilot, Claude CLI, Gemini CLI, Qodo, Cline and more
 </p>
 
 <p align="center">
@@ -18,14 +18,23 @@
   <a href="./SECURITY.md"><img src="https://img.shields.io/badge/Security-Responsible%20Disclosure-yellow.svg" alt="Responsible Disclosure Policy" /></a>
 </p>
 
-## Install
+<div align="center">
+  <img src="https://github.com/lirantal/agent-rules/blob/main/.github/agent-rules-1.png?raw=true" alt="agent-rules logo"/>
+</div>
+
+## Usage
 
 ```bash
 npx agent-rules
 ```
-## Usage: CLI
 
-// @TODO
+## Rules
+
+Current category of rules available:
+
+- Secure coding practices, based on Liran Tal's [Node.js Secure Coding](https://www.nodejs-security.com/)
+- Security vulnerabilities, based on [Snyk.io](https://snyk.io/)
+- Testing strategy and test code guidelines, built from [Yoni Goldberg's JavaScript Testing](https://github.com/goldbergyoni/javascript-testing-best-practices) and Liran Tal's testing strategy
 
 ## Contributing
 
