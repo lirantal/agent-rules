@@ -1,10 +1,12 @@
 ---
 applyTo: "**/*.test.js,**/*.test.ts,**/*.spec.js,**/*.spec.ts,__tests__/**/*.js,__tests__/**/*.ts,test/**/*.js,test/**/*.ts"
 ---
- 
-# Testing Guidelines for Node.js applications test code
+
+# Testing Guidelines for Node.js applications 
 
 This document outlines the rules and guidelines for AI agents generating test code for modern Node.js applications.
+
+The following are project tests code standards, principles and strategy for for JavaScript and TypeScript projects that you should apply and follow if you are working on a task related to writing tests, updating existing tests, or overall refactoring and making changes to test code.
 
 ## General Testing Principles
 
