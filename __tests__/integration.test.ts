@@ -21,12 +21,17 @@ describe('Integration Tests', () => {
 
   describe('End-to-End Scaffolding', () => {
     test('should successfully scaffold GitHub Copilot testing instructions', async () => {
+      // @TODO change this test so that it doesn't have a hard-coded check on the file names
+      // in the files.include() assertion but rather checks against the files in the
+      // __template__/nodejs directory as a source of truth
+      // this is to ensure that the test is resilient to changes in the template structure
+
       // Arrange
       process.chdir(tempDir)
       const scaffoldInstructions = {
         aiApp: 'github-copilot',
         codeLanguage: 'nodejs',
-        codeTopic: 'testing'
+        codeTopic: 'secure-code'
       }
 
       // Act
@@ -37,12 +42,12 @@ describe('Integration Tests', () => {
       const files = await fs.readdir(targetDir)
 
       // Verify correct files were created
-      assert.ok(files.includes('index.instructions.md'))
-      assert.ok(files.includes('testing.instructions.md'))
+      assert.ok(files.includes('child-process.instructions.md'))
+      assert.ok(files.includes('file-system.instructions.md'))
 
       // Verify file contents
-      const indexContent = await fs.readFile(path.join(targetDir, 'index.instructions.md'), 'utf-8')
-      const testingContent = await fs.readFile(path.join(targetDir, 'testing.instructions.md'), 'utf-8')
+      const indexContent = await fs.readFile(path.join(targetDir, 'child-process.instructions.md'), 'utf-8')
+      const testingContent = await fs.readFile(path.join(targetDir, 'file-system.instructions.md'), 'utf-8')
 
       assert.ok(indexContent.length > 0)
       assert.ok(testingContent.length > 0)
@@ -90,16 +95,21 @@ describe('Integration Tests', () => {
     })
 
     test('should preserve file content exactly during scaffolding', async () => {
+      // @TODO change this test so that it doesn't have a hard-coded check on the file names
+      // in the files.include() assertion but rather checks against the files in the
+      // __template__/nodejs directory as a source of truth
+      // this is to ensure that the test is resilient to changes in the template structure
+
       // Arrange
       const scaffoldInstructions = {
         aiApp: 'github-copilot',
         codeLanguage: 'nodejs',
-        codeTopic: 'testing'
+        codeTopic: 'secure-code'
       }
 
       // Read original template content from the original working directory
-      const originalIndexPath = path.join(originalCwd, '__template__/nodejs/testing/index.md')
-      const originalTestingPath = path.join(originalCwd, '__template__/nodejs/testing/testing.md')
+      const originalIndexPath = path.join(originalCwd, '__template__/nodejs/secure-code/child-process.md')
+      const originalTestingPath = path.join(originalCwd, '__template__/nodejs/secure-code/file-system.md')
 
       const originalIndexContent = await fs.readFile(originalIndexPath, 'utf-8')
       const originalTestingContent = await fs.readFile(originalTestingPath, 'utf-8')
@@ -112,8 +122,8 @@ describe('Integration Tests', () => {
 
       // Assert
       const targetDir = path.join(tempDir, '.github', 'instructions')
-      const copiedIndexContent = await fs.readFile(path.join(targetDir, 'index.instructions.md'), 'utf-8')
-      const copiedTestingContent = await fs.readFile(path.join(targetDir, 'testing.instructions.md'), 'utf-8')
+      const copiedIndexContent = await fs.readFile(path.join(targetDir, 'child-process.instructions.md'), 'utf-8')
+      const copiedTestingContent = await fs.readFile(path.join(targetDir, 'file-system.instructions.md'), 'utf-8')
 
       // Content should be preserved exactly
       assert.strictEqual(copiedIndexContent, originalIndexContent)
@@ -121,6 +131,11 @@ describe('Integration Tests', () => {
     })
 
     test('should work when target directory already exists', async () => {
+      // @TODO change this test so that it doesn't have a hard-coded check on the file names
+      // in the files.include() assertion but rather checks against the files in the
+      // __template__/nodejs directory as a source of truth
+      // this is to ensure that the test is resilient to changes in the template structure
+
       // Arrange
       process.chdir(tempDir)
       const targetDir = path.join(tempDir, '.github', 'instructions')
@@ -143,7 +158,6 @@ describe('Integration Tests', () => {
 
       // Should have both existing and new files
       assert.ok(files.includes('existing-file.txt'))
-      assert.ok(files.includes('index.instructions.md'))
       assert.ok(files.includes('testing.instructions.md'))
 
       // Existing file should be unchanged
