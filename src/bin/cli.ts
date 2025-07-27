@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { intro, outro, select } from '@clack/prompts'
+import { intro, outro, select, multiselect } from '@clack/prompts'
 import { styleText, debuglog } from 'node:util'
 import { scaffoldAiAppInstructions } from '../main.js'
 
@@ -30,30 +30,32 @@ async function init () {
 
   debug('Selected AI App:', aiApp)
 
-  const codeTopic = await select({
+  const topicChoices = await multiselect({
     message: 'Which topic do you want to generate agentic rules for?',
     options: [
-      { value: 'secure-code', label: 'Secure Coding' },
-      { value: 'security-vulnerabilities', label: 'Security Vulnerabilities' },
-      { value: 'testing', label: 'Testing' },
+      { value: 'secure-code', label: 'Secure Coding', hint: 'Apply security best practices for defensive coding in Node.js' },
+      { value: 'security-vulnerabilities', label: 'Security Vulnerabilities', hint: 'Scan and fix security vulnerabilities in Node.js application code and 3rd-party dependencies' },
+      { value: 'testing', label: 'Testing', hint: 'Establish mature testing strategy and test code guidelines in Node.js applications' },
     ],
-    initialValue: 'secure-coding',
+    required: true
   })
 
   // Handle cancellation
-  if (typeof codeTopic === 'symbol') {
+  if (typeof topicChoices === 'symbol') {
     throw new Error('Operation cancelled by user')
   }
 
-  debug('Selected code topic:', codeTopic)
+  debug('Selected code topic: ', topicChoices.join(', '))
 
-  const templateChoices = {
-    aiApp,
-    codeLanguage,
-    codeTopic
+  for (const codeTopic of topicChoices) {
+    const templateChoices = {
+      aiApp,
+      codeLanguage,
+      codeTopic
+    }
+
+    await scaffoldAiAppInstructions(templateChoices)
   }
-
-  await scaffoldAiAppInstructions(templateChoices)
 
   outro('Aye Captain, godspeed with yar vibe coding 🫡')
 }
