@@ -1,5 +1,11 @@
 # agent-rules
 
+## 1.0.1
+
+### Patch Changes
+
+- 2381194: feat: updating testing template
+
 ## 1.0.0
 
 ### Major Changes
