@@ -33,9 +33,11 @@ async function init () {
   const codeTopic = await select({
     message: 'Which topic do you want to generate agentic rules for?',
     options: [
+      { value: 'secure-code', label: 'Secure Coding' },
+      { value: 'security-vulnerabilities', label: 'Security Vulnerabilities' },
       { value: 'testing', label: 'Testing' },
     ],
-    initialValue: 'testing',
+    initialValue: 'secure-coding',
   })
 
   // Handle cancellation
