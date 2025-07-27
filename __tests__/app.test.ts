@@ -171,7 +171,7 @@ describe('Agent Rules CLI', () => {
       const scaffoldInstructions = {
         aiApp: 'github-copilot',
         codeLanguage: 'nodejs',
-        codeTopic: 'testing'
+        codeTopic: 'secure-code'
       }
 
       const originalCwd = process.cwd()
@@ -182,8 +182,8 @@ describe('Agent Rules CLI', () => {
 
         const files = await fs.readdir(targetDir)
 
-        // Should have copied both index.md and testing.md as .instructions.md files
-        const expectedFiles = ['index.instructions.md', 'testing.instructions.md']
+        // Should have copied multiple files in the secure-code topic
+        const expectedFiles = ['child-process.instructions.md', 'file-system.instructions.md']
         for (const expectedFile of expectedFiles) {
           assert.ok(files.includes(expectedFile), `Should include ${expectedFile}`)
         }
