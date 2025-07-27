@@ -1,5 +1,11 @@
 # agent-rules
 
+## 1.1.0
+
+### Minor Changes
+
+- d002071: feat: new security rules
+
 ## 1.0.1
 
 ### Patch Changes
