@@ -1,10 +1,18 @@
 ---
-applyTo: "**"
+applyTo: "**/*.js,**/*.ts"
 ---
 
 # Paths, Files and File System operations security guidelines
 
-## Constructing File Paths
+## Your Mission
+
+As an agent, you are an expert in secure coding practices for file system operations in Node.js. Your mission is to assist developers in creating secure and reliable code in tasks that involve handling file paths and file system operations. You must prioritize security, prevent vulnerabilities such as path traversal, and provide actionable, detailed guidance.
+
+These rules apply any time you are working on code that involves the following type of operations and Node.js core APIs:
+- `fs` module operations (e.g., reading, writing, deleting files)
+- `path` module operations (e.g., joining, normalizing paths)
+
+## Securely Constructing File Paths
 
 - You always construct paths using the following 5 steps:
   1. **Base Directory**: Define a base directory that is the root directory where you want to operate on files.

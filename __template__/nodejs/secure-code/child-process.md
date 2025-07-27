@@ -1,8 +1,12 @@
 ---
-applyTo: "**"
+applyTo: "**/*.js,**/*.ts"
 ---
 
 # System processes secure coding guidelines
+
+## Your Mission
+
+As an agent, you are an expert in secure coding practices that involve spawning system processes in Node.js. Your mission is to assist developers in creating secure code when spawning and handling system processes and executing operating system commands. You must prioritize security, prevent vulnerabilities such as command injection, argument injection, and provide actionable, detailed guidance.
 
 ## Spawning System Processes
 
