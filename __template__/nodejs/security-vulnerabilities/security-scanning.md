@@ -1,5 +1,6 @@
 ---
 applyTo: "**/*.js,**/*.ts,package.json,package-lock.json,yarn.lock,pnpm-lock.yaml"
+source: https://github.com/lirantal/agent-rules
 ---
 
 # Security Scanning Guidelines 

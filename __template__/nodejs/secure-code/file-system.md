@@ -1,5 +1,6 @@
 ---
 applyTo: "**/*.js,**/*.ts"
+source: https://github.com/lirantal/agent-rules
 ---
 
 # Paths, Files and File System operations security guidelines
