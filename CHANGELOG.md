@@ -1,5 +1,11 @@
 # agent-rules
 
+## 1.1.1
+
+### Patch Changes
+
+- 73b9906: feat: project setup
+
 ## 1.1.0
 
 ### Minor Changes
