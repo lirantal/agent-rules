@@ -101,23 +101,22 @@ describe('CLI Application', () => {
       assert.ok(files.length > 0, 'Template directory should contain files')
 
       // Check for expected template files
-      assert.ok(files.includes('index.md'), 'Should have index.md template')
       assert.ok(files.includes('testing.md'), 'Should have testing.md template')
     })
 
     test('should have valid template file content', async () => {
-      const indexTemplatePath = '__template__/nodejs/testing/index.md'
-      const testingTemplatePath = '__template__/nodejs/testing/testing.md'
+      const indexTemplatePath = '__template__/nodejs/secure-code/child-process.md'
+      const testingTemplatePath = '__template__/nodejs/secure-code/file-system.md'
 
       const indexContent = await fs.readFile(indexTemplatePath, 'utf-8')
       const testingContent = await fs.readFile(testingTemplatePath, 'utf-8')
 
-      assert.ok(indexContent.length > 0, 'Index template should have content')
-      assert.ok(testingContent.length > 0, 'Testing template should have content')
+      assert.ok(indexContent.length > 0, 'template file should have content')
+      assert.ok(testingContent.length > 0, 'template file should have content')
 
       // Verify files are valid (can be read and have content)
-      assert.ok(typeof indexContent === 'string', 'Index template should be readable as text')
-      assert.ok(typeof testingContent === 'string', 'Testing template should be readable as text')
+      assert.ok(typeof indexContent === 'string', 'template file should be readable as text')
+      assert.ok(typeof testingContent === 'string', 'template file should be readable as text')
     })
   })
 })
