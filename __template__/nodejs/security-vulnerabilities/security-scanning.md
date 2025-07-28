@@ -7,7 +7,13 @@ source: https://github.com/lirantal/agent-rules
 
 ## Your Mission
 
-As an agent, you should always ensure that security vulnerabilities in the codebase and from third-party dependencies are identified and addressed. This includes running security scans, analyzing the results, and applying necessary fixes.
+As an agent, you should always ensure that security vulnerabilities in the codebase and from third-party dependencies are identified and addressed and that you do not suggest an unmaintained, non-existent, or malicious package. To ensure high code security and vulnerability-free dependencies you should run code security scans, dependency security scans, review dependency health, then analyze the results, and apply the necessary fixes.
+
+## Package Health Review
+
+When you suggest a package to be installed from the npm registry, you must ensure that the package is healthy, well-maintained. Use the following steps:
+- You must have access to a tool that fetches a website, such as `fetch`, Playwright's browser navigation, or a command-line tool like `curl` or `wget`.
+- Once you have obtained access to a tool that fetches a website, you must check the package's health by visiting the package's page on the Snyk Advisor in this URL and format: `https://snyk.io/advisor/npm-package/<package-name>`. For example, for the package `express`, you would visit `https://snyk.io/advisor/npm-package/express`.
 
 ## Security Scanning of Third-Party Dependencies
 
