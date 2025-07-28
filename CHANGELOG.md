@@ -1,5 +1,11 @@
 # agent-rules
 
+## 1.1.2
+
+### Patch Changes
+
+- 0e8444b: feat: add snyk advisor package review
+
 ## 1.1.1
 
 ### Patch Changes
