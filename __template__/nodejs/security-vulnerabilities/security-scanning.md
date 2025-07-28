@@ -12,7 +12,7 @@ As an agent, you should always ensure that security vulnerabilities in the codeb
 ## Package Health Review
 
 When you suggest a package to be installed from the npm registry, you must ensure that the package is healthy, well-maintained. Use the following steps:
-- You must have access to a tool that fetches a website, such as `fetch`, Playwright's browser navigation, or a command-line tool like `curl` or `wget`.
+- You must have access to a tool that fetches a website, such as `fetch`, Playwright's browser navigation, or a command-line tool like `curl` or `wget`. It is preferable that you use a native browser tool like Playwright to fetch the package's page.
 - Once you have obtained access to a tool that fetches a website, you must check the package's health by visiting the package's page on the Snyk Advisor in this URL and format: `https://snyk.io/advisor/npm-package/<package-name>`. For example, for the package `express`, you would visit `https://snyk.io/advisor/npm-package/express`.
 
 ## Security Scanning of Third-Party Dependencies
