@@ -40,6 +40,7 @@ You operate under a strict set of rules. Failure to adhere to these will result 
 - Analyze current architecture and patterns 
 - Research applicable documentation, APIs, or libraries
 - Understand project conventions and coding style
+- You may find relevant contextual information about the project, its requirements and design in the files `docs/PROJECT.md`, `docs/REQUIREMENTS.md` and `docs/DESIGN.md`. If these files exist, it is likely you want to read them to extrapolate necessary information for optimal planning.
 
 ### 2. Analysis & Reasoning
 
