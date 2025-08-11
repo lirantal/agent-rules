@@ -28,10 +28,15 @@ The tool is built with TypeScript and packaged as a Node.js module. It provides 
 The project is structured as a monorepo with the following key components:
 
 - **`src/`**: Contains the core application logic.
-  - **`main.ts`**: The main module that handles the logic for scaffolding AI app instructions. It resolves template directories, creates target directories, and copies template files.
+  - **`main.ts`**: The main orchestration module that handles template resolution, directory creation, and delegates AI app-specific processing to adapters.
   - **`bin/cli.ts`**: The CLI entry point. It uses `@clack/prompts` to interact with the user and then calls the `scaffoldAiAppInstructions` function from `main.ts`.
+  - **`adapters/`**: Contains the adapter pattern implementation for AI app-specific logic.
+    - **`base-adapter.ts`**: Abstract base class defining the adapter interface.
+    - **`github-copilot-adapter.ts`**: GitHub Copilot-specific implementation.
+    - **`adapter-registry.ts`**: Registry for managing adapter instances.
+    - **`index.ts`**: Module exports for the adapters.
 - **`__template__/`**: Contains the template files for the agentic rules, organized by programming language and topic.
-- **`__tests__/`**: Contains the tests for the application.
+- **`__tests__/`**: Contains the tests for the application, including unit tests for adapters and integration tests.
 - **`.github/`**: Contains GitHub-related files, including workflows, issue templates, and the destination for the generated GitHub Copilot instructions.
 - **Configuration Files**:
   - **`package.json`**: Defines project metadata, dependencies, and scripts.
@@ -39,4 +44,4 @@ The project is structured as a monorepo with the following key components:
   - **`tsup.config.ts`**: Configures the `tsup` build process.
   - **`eslint.config.js`**: Configures ESLint for code linting.
 
-The project follows a modular architecture, with a clear separation between the CLI and the core logic. This makes the code easier to maintain and test. The use of `tsup` for building ensures that the project can be distributed as both CommonJS and ES modules.
+The project follows a modular architecture with an **adapter pattern** for AI app extensibility, ensuring clear separation between the CLI, core orchestration logic, and AI app-specific processing. This makes the code easier to maintain, test, and extend with new AI apps. The use of `tsup` for building ensures that the project can be distributed as both CommonJS and ES modules.

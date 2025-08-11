@@ -35,14 +35,15 @@ The project has the following key dependencies:
 
 ### AI App Selection
 
-**Capability:** The CLI must allow users to select from a list of supported AI coding assistants.
+**Capability:** The CLI must allow users to select from a list of supported AI coding assistants, with support managed through an extensible adapter system.
 
 **Acceptance Criteria:**
 
-- The CLI must display a list of supported AI apps.
+- The CLI must display a list of supported AI apps from the adapter registry.
 - The user must be able to select one AI app from the list.
-- The CLI must validate the user's selection.
+- The CLI must validate the user's selection against the adapter registry.
 - The CLI must throw an error if an unsupported AI app is selected.
+- The system must support adding new AI apps through the adapter pattern without modifying core logic.
 
 ### Topic Selection
 
@@ -56,21 +57,37 @@ The project has the following key dependencies:
 
 ### Rule Generation
 
-**Capability:** The CLI must generate the agentic rule files based on the user's selections.
+**Capability:** The CLI must generate the agentic rule files based on the user's selections using AI app-specific adapters.
 
 **Acceptance Criteria:**
 
 - The CLI must create the target directory for the generated files if it does not already exist.
-- The CLI must copy the relevant template files to the target directory.
-- The generated files must have the correct file names and extensions.
-- The content of the generated files must be identical to the content of the template files.
+- The system must delegate processing to the appropriate AI app adapter based on user selection.
+- Each adapter must implement secure file operations following the 5-step path validation process.
+- The generated files must have the correct file names and extensions as defined by the AI app adapter.
+- The content of the generated files must be processed according to the AI app's specific requirements.
 
 ### Template Management
 
-**Capability:** The project must provide a way to manage the templates for the agentic rules.
+**Capability:** The project must provide a way to manage the templates for the agentic rules with support for extensible AI app-specific processing.
 
 **Acceptance Criteria:**
 
 - The templates must be organized in a directory structure based on programming language and topic.
 - The project must be able to resolve the correct template directory based on the user's selections.
 - The project must throw an error if the template directory cannot be found.
+- Each AI app adapter must be able to process templates according to its specific requirements.
+- The system must support different processing strategies per AI app (e.g., direct copy, transformation, etc.).
+
+### Adapter System
+
+**Capability:** The project must provide an extensible adapter system for supporting multiple AI coding assistants.
+
+**Acceptance Criteria:**
+
+- The system must implement a base adapter interface that all AI app adapters must follow.
+- Each adapter must handle AI app-specific configuration (directory structure, file naming, etc.).
+- The adapter registry must manage the mapping between AI app identifiers and their corresponding adapters.
+- New AI apps must be addable by creating new adapter classes without modifying existing core logic.
+- All adapters must implement secure file system operations to prevent security vulnerabilities.
+- The system must validate that AI app adapters implement the required interface correctly.
