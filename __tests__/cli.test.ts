@@ -73,6 +73,7 @@ describe('CLI Application', () => {
 
       // Test known supported AI apps
       assert.doesNotThrow(() => getAiAppDirectory('github-copilot'), 'Should support GitHub Copilot')
+      assert.doesNotThrow(() => getAiAppDirectory('cursor'), 'Should support Cursor')
 
       // Test unsupported app throws appropriate error
       assert.throws(() => getAiAppDirectory('unsupported'), /not supported/, 'Should reject unsupported AI apps')

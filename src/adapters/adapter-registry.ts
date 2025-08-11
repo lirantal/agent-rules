@@ -1,12 +1,14 @@
 import { BaseAdapter } from './base-adapter.js'
 import { GitHubCopilotAdapter } from './github-copilot-adapter.js'
+import { CursorAdapter } from './cursor-adapter.js'
 
 /**
  * Registry of AI app adapters
  */
 export class AdapterRegistry {
   private static readonly adapters = new Map<string, () => BaseAdapter>([
-    ['github-copilot', () => new GitHubCopilotAdapter()]
+    ['github-copilot', () => new GitHubCopilotAdapter()],
+    ['cursor', () => new CursorAdapter()]
   ])
 
   /**

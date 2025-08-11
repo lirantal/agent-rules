@@ -32,6 +32,15 @@ describe('Agent Rules CLI', () => {
       })
     })
 
+    test('should return correct config for cursor', () => {
+      const result = getAiAppDirectory('cursor')
+
+      assert.deepStrictEqual(result, {
+        directory: '.cursor/rules',
+        filesSuffix: '.mdc'
+      })
+    })
+
     test('should throw error for unsupported AI app', () => {
       assert.throws(
         () => getAiAppDirectory('unsupported-app'),
