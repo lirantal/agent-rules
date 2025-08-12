@@ -22,6 +22,8 @@ The tool is built with TypeScript and packaged as a Node.js module. It provides 
 - **Linting**: ESLint with `neostandard` and `eslint-plugin-security`
 - **CLI Prompts**: `@clack/prompts`
 - **Package Manager**: npm
+- **Markdown Processing**: `micromark-extension-frontmatter`, `mdast-util-from-markdown`, `mdast-util-to-markdown`, `mdast-util-frontmatter`
+- **YAML Processing**: `yaml`
 
 ## General Project Architecture & Key Patterns
 
@@ -32,10 +34,11 @@ The project is structured as a monorepo with the following key components:
   - **`bin/cli.ts`**: The CLI entry point. It uses `@clack/prompts` to interact with the user and then calls the `scaffoldAiAppInstructions` function from `main.ts`.
   - **`adapters/`**: Contains the adapter pattern implementation for AI app-specific logic.
     - **`base-adapter.ts`**: Abstract base class defining the adapter interface.
-    - **`github-copilot-adapter.ts`**: GitHub Copilot-specific implementation.
+    - **`github-copilot-adapter.ts`**: GitHub Copilot-specific implementation with direct file copying.
+    - **`cursor-adapter.ts`**: Cursor-specific implementation with advanced frontmatter processing and transformation.
     - **`adapter-registry.ts`**: Registry for managing adapter instances.
     - **`index.ts`**: Module exports for the adapters.
-- **`__template__/`**: Contains the template files for the agentic rules, organized by programming language and topic.
+- **`__template__/`**: Contains the template files for the agentic rules, organized by programming language and topic. Templates can include YAML frontmatter for metadata and processing instructions.
 - **`__tests__/`**: Contains the tests for the application, including unit tests for adapters and integration tests.
 - **`.github/`**: Contains GitHub-related files, including workflows, issue templates, and the destination for the generated GitHub Copilot instructions.
 - **Configuration Files**:
@@ -44,4 +47,12 @@ The project is structured as a monorepo with the following key components:
   - **`tsup.config.ts`**: Configures the `tsup` build process.
   - **`eslint.config.js`**: Configures ESLint for code linting.
 
-The project follows a modular architecture with an **adapter pattern** for AI app extensibility, ensuring clear separation between the CLI, core orchestration logic, and AI app-specific processing. This makes the code easier to maintain, test, and extend with new AI apps. The use of `tsup` for building ensures that the project can be distributed as both CommonJS and ES modules.
+The project follows a modular architecture with an **adapter pattern** for AI app extensibility, ensuring clear separation between the CLI, core orchestration logic, and AI app-specific processing. This makes the code easier to maintain, test, and extend with new AI apps. 
+
+Key features include:
+- **Advanced Template Processing**: Support for markdown files with YAML frontmatter processing and transformation
+- **AST-based Parsing**: Robust markdown processing using micromark and mdast utilities for reliable content manipulation
+- **Structured YAML Handling**: Sophisticated frontmatter field transformation while preserving non-modified content
+- **Extensible Processing Pipeline**: Each adapter can implement custom processing logic, from simple file copying to complex content transformation
+
+The use of `tsup` for building ensures that the project can be distributed as both CommonJS and ES modules.

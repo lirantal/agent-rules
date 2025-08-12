@@ -79,6 +79,20 @@ The project has the following key dependencies:
 - Each AI app adapter must be able to process templates according to its specific requirements.
 - The system must support different processing strategies per AI app (e.g., direct copy, transformation, etc.).
 
+### Template Frontmatter Processing
+
+**Capability:** The project must support advanced frontmatter processing to transform template metadata for different AI app requirements.
+
+**Acceptance Criteria:**
+
+- The system must parse YAML frontmatter in markdown template files using AST-based parsing for reliability.
+- The system must support field transformation (e.g., converting `applyTo` to `globs` for Cursor compatibility).
+- The system must preserve all non-transformed frontmatter fields exactly as they appear in the source.
+- The system must use structured YAML parsing and serialization to maintain data integrity and formatting.
+- The system must gracefully handle malformed YAML frontmatter with appropriate fallback mechanisms.
+- The system must maintain proper markdown structure and formatting in the output files.
+- Each adapter must be able to implement its own frontmatter transformation logic as needed.
+
 ### Adapter System
 
 **Capability:** The project must provide an extensible adapter system for supporting multiple AI coding assistants.
@@ -91,3 +105,4 @@ The project has the following key dependencies:
 - New AI apps must be addable by creating new adapter classes without modifying existing core logic.
 - All adapters must implement secure file system operations to prevent security vulnerabilities.
 - The system must validate that AI app adapters implement the required interface correctly.
+- Adapters must be able to implement custom template processing, including frontmatter transformation when required.

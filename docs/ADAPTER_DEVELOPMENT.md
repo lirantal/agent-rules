@@ -17,7 +17,23 @@ The `agent-rules` project uses an adapter pattern to support multiple AI coding 
 
 ### Current Adapters
 
-- **`GitHubCopilotAdapter`**: Handles GitHub Copilot instruction generation
+- **`GitHubCopilotAdapter`**: Handles GitHub Copilot instruction generation with direct file copying
+- **`CursorAdapter`**: Handles Cursor instruction generation with frontmatter transformation
+
+### Dependencies for Frontmatter Processing
+
+If your adapter needs to process markdown frontmatter, the following dependencies are available:
+
+```typescript
+// For AST-based markdown parsing
+import { fromMarkdown } from 'mdast-util-from-markdown'
+import { toMarkdown } from 'mdast-util-to-markdown'
+import { frontmatter } from 'micromark-extension-frontmatter'
+import { frontmatterFromMarkdown, frontmatterToMarkdown } from 'mdast-util-frontmatter'
+
+// For structured YAML processing
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
+```
 
 ## Creating a New Adapter
 
@@ -162,6 +178,82 @@ async processInstructions(...) {
 }
 ```
 
+### 4. Frontmatter Processing (Cursor Pattern)
+
+For AI apps that need to transform template frontmatter metadata:
+
+```typescript
+import { fromMarkdown } from 'mdast-util-from-markdown'
+import { toMarkdown } from 'mdast-util-to-markdown'
+import { frontmatter } from 'micromark-extension-frontmatter'
+import { frontmatterFromMarkdown, frontmatterToMarkdown } from 'mdast-util-frontmatter'
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
+
+async processInstructions(...) {
+  const templateFiles = await fs.readdir(resolvedTemplateDirectory)
+  
+  for (const templateFile of templateFiles) {
+    const content = await fs.readFile(path.join(resolvedTemplateDirectory, templateFile), 'utf-8')
+    const processedContent = this.processFrontmatter(content)
+    await this.writeProcessedFile(processedContent, templateFile, resolvedTargetDirectory)
+  }
+}
+
+private processFrontmatter(content: string): string {
+  try {
+    // Parse markdown with frontmatter support
+    const ast = fromMarkdown(content, {
+      extensions: [frontmatter(['yaml'])],
+      mdastExtensions: [frontmatterFromMarkdown(['yaml'])]
+    })
+
+    // Transform frontmatter nodes
+    let hasTransformations = false
+    for (const node of ast.children) {
+      if (node.type === 'yaml') {
+        const transformedValue = this.transformFrontmatterFields(node.value)
+        if (transformedValue !== node.value) {
+          node.value = transformedValue
+          hasTransformations = true
+        }
+      }
+    }
+
+    // Convert back to markdown if transformations were made
+    if (hasTransformations) {
+      return toMarkdown(ast, {
+        extensions: [frontmatterToMarkdown(['yaml'])]
+      })
+    }
+
+    return content
+  } catch (error) {
+    // Fallback to original content on error
+    return content
+  }
+}
+
+private transformFrontmatterFields(frontmatterValue: string): string {
+  try {
+    // Use structured YAML parsing for accurate transformation
+    const frontmatterData = parseYaml(frontmatterValue)
+    
+    if (frontmatterData && typeof frontmatterData === 'object' && 'applyTo' in frontmatterData) {
+      const transformedData = { ...frontmatterData }
+      transformedData.globs = frontmatterData.applyTo  // Transform field
+      delete transformedData.applyTo
+      
+      return stringifyYaml(transformedData, { lineWidth: -1 }).trim()
+    }
+    
+    return frontmatterValue
+  } catch (error) {
+    // Fallback to regex-based transformation for malformed YAML
+    return frontmatterValue.replace(/^applyTo:\s*(.+)$/gm, 'globs: $1')
+  }
+}
+```
+
 ## Best Practices
 
 ### Security
@@ -170,11 +262,20 @@ async processInstructions(...) {
 - Use `path.basename()` to sanitize filenames
 - Implement proper error handling for file system operations
 
+### Frontmatter Processing
+- Use AST-based parsing with micromark extensions for reliable markdown processing
+- Employ structured YAML parsing with the `yaml` package for object manipulation
+- Always provide fallback mechanisms for malformed YAML (e.g., regex-based transformation)
+- Preserve non-transformed frontmatter fields exactly as they appear in the source
+- Use `stringifyYaml` options to control output formatting (`lineWidth: -1` prevents line wrapping)
+- Handle edge cases like empty frontmatter, missing fields, and invalid YAML gracefully
+
 ### Error Handling
 - Provide descriptive error messages
 - Handle file permission errors gracefully
 - Log debug information for troubleshooting
 - Fail fast on configuration errors
+- Always return original content when frontmatter processing fails
 
 ### Performance
 - Minimize file system operations
@@ -194,6 +295,8 @@ async processInstructions(...) {
 2. **Configuration Inconsistencies**: Ensure your config matches your actual file operations
 3. **Memory Leaks**: Properly close file handles and clean up resources
 4. **Platform Compatibility**: Use `path` module methods instead of string concatenation
+5. **Frontmatter Processing Errors**: Always provide fallback mechanisms for YAML parsing failures
+6. **AST Manipulation**: Be careful when modifying markdown AST nodes to maintain document structure
 
 ## Testing Your Adapter
 
@@ -203,7 +306,11 @@ Before submitting your adapter:
 2. Run linting: `npm run lint`
 3. Test with real templates and verify output
 4. Test error scenarios (missing files, permissions, etc.)
+5. Test frontmatter processing with various YAML formats and edge cases
 
-## Example: Complete Adapter Implementation
+## Example: Complete Adapter Implementations
 
-See `src/adapters/github-copilot-adapter.ts` for a complete, production-ready adapter implementation that demonstrates all the concepts covered in this guide.
+- **Simple Processing**: See `src/adapters/github-copilot-adapter.ts` for direct file copying
+- **Advanced Processing**: See `src/adapters/cursor-adapter.ts` for frontmatter transformation with AST parsing
+
+Both provide complete, production-ready adapter implementations that demonstrate the concepts covered in this guide.

@@ -94,7 +94,16 @@ The project follows a layered architecture with an adapter pattern:
   - Handles file copying with secure path validation.
   - Applies GitHub Copilot naming conventions and directory structure.
 
-#### 2.3.3. `AdapterRegistry`
+#### 2.3.3. `CursorAdapter`
+- **Component**: Concrete adapter for Cursor AI coding assistant.
+- **Responsibilities**:
+  - Implements Cursor-specific template processing with frontmatter transformation.
+  - Handles AST-based markdown parsing using micromark extensions.
+  - Transforms frontmatter fields from template format (`applyTo`) to Cursor format (`globs`).
+  - Uses structured YAML parsing for accurate field manipulation while preserving other frontmatter content.
+  - Applies Cursor naming conventions (`.mdc` extension) and directory structure (`.cursor/rules`).
+
+#### 2.3.4. `AdapterRegistry`
 - **Component**: Registry for managing adapter instances.
 - **Responsibilities**:
   - Maps AI app identifiers to their corresponding adapters.
@@ -106,7 +115,37 @@ The project follows a layered architecture with an adapter pattern:
 - **Component**: The directory containing the templates for the agentic rules.
 - **Responsibilities**: 
   - Stores the templates in a structured way organized by programming language and topic.
+  - Contains markdown files with YAML frontmatter for template metadata and processing instructions.
 - **Interfaces**: Adapters read from this directory to process templates.
+
+### 2.5. Template Frontmatter Processing
+
+The project supports advanced frontmatter processing for template transformation, particularly for AI apps that require different metadata formats:
+
+#### 2.5.1. Frontmatter Structure
+Templates can include YAML frontmatter with metadata:
+```markdown
+---
+applyTo: "**/*.js,**/*.ts"
+description: "Template description"
+version: "1.0.0"
+---
+
+# Template Content
+...
+```
+
+#### 2.5.2. Processing Pipeline
+1. **AST Parsing**: Uses `micromark-extension-frontmatter` and `mdast-util-frontmatter` for robust markdown parsing
+2. **YAML Processing**: Employs structured YAML parsing with the `yaml` package for object manipulation
+3. **Field Transformation**: Converts template-specific fields to AI app-specific formats
+4. **Content Preservation**: Maintains all non-transformed frontmatter fields exactly as they are
+5. **Fallback Handling**: Gracefully handles malformed YAML with regex-based fallback
+
+#### 2.5.3. Cursor-Specific Transformations
+- Transforms `applyTo` field to `globs` field for Cursor compatibility
+- Preserves YAML structure and formatting using structured parsing
+- Maintains proper markdown AST processing for reliable output
 
 ## 3. Data Models
 
@@ -239,6 +278,11 @@ abstract class BaseAdapter {
 
 ### 7.2. Maintainability
 - **Clear Separation of Concerns**: Each adapter handles only its specific AI app logic
+- **Frontmatter Processing Pipeline**: The frontmatter processing system is designed with clear separation:
+  - AST parsing for reliable markdown structure handling
+  - Structured YAML processing for accurate data manipulation
+  - Fallback mechanisms for error resilience
+  - Field transformation logic isolated in dedicated methods
 - **OOP Design**: Class-based architecture makes code easier to understand and maintain
 - **Type Safety**: Full TypeScript typing ensures compile-time error detection
 - **Documentation**: Code is well-documented with clear responsibilities
@@ -246,6 +290,9 @@ abstract class BaseAdapter {
 ### 7.3. Performance
 - **Lazy Loading**: Adapters are instantiated only when needed
 - **Efficient File Operations**: Minimized file system calls
+- **AST Caching**: Markdown AST parsing is performed only when transformations are needed
+- **Conditional Processing**: Frontmatter transformation is skipped when no changes are required
+- **Memory Management**: Large files are processed streaming-style to minimize memory usage
 - **Error Recovery**: Graceful handling of file operation failures
 
 ### 7.4. Development Guidelines
