@@ -5,6 +5,7 @@ import { fromMarkdown } from 'mdast-util-from-markdown'
 import { toMarkdown } from 'mdast-util-to-markdown'
 import { frontmatter } from 'micromark-extension-frontmatter'
 import { frontmatterFromMarkdown, frontmatterToMarkdown } from 'mdast-util-frontmatter'
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { BaseAdapter, type AiAppConfig, type ScaffoldInstructions } from './base-adapter.js'
 
 const debug = debuglog('agent-rules')
@@ -148,11 +149,31 @@ export class CursorAdapter extends BaseAdapter {
   }
 
   /**
-   * Transform frontmatter fields from template format to Cursor format using structured approach
+   * Transform frontmatter fields from template format to Cursor format using structured YAML parsing
    */
   private transformFrontmatterFields (frontmatterValue: string): string {
-    // Transform 'applyTo' field to 'globs' field
-    return frontmatterValue.replace(/^applyTo:\s*(.+)$/gm, 'globs: $1')
+    try {
+      // Parse YAML string into structured object
+      const frontmatterData = parseYaml(frontmatterValue)
+
+      // Check if frontmatterData is an object and has applyTo field
+      if (frontmatterData && typeof frontmatterData === 'object' && 'applyTo' in frontmatterData) {
+        // Transform applyTo field to globs field
+        const transformedData = { ...frontmatterData }
+        transformedData.globs = frontmatterData.applyTo
+        delete transformedData.applyTo
+
+        // Serialize back to YAML string without document separators
+        return stringifyYaml(transformedData, { lineWidth: -1 }).trim()
+      }
+
+      // No applyTo field found, return original
+      return frontmatterValue
+    } catch (error) {
+      debug('Error parsing YAML frontmatter:', error)
+      // Fall back to regex-based transformation for malformed YAML
+      return frontmatterValue.replace(/^applyTo:\s*(.+)$/gm, 'globs: $1')
+    }
   }
 
   /**

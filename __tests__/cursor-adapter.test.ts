@@ -26,7 +26,14 @@ describe('CursorAdapter', () => {
 
   afterEach(async () => {
     // Clean up temporary directories
-    await fs.rm(tempDir, { recursive: true, force: true })
+    try {
+      const exists = await fs.access(tempDir).then(() => true).catch(() => false)
+      if (exists) {
+        await fs.rm(tempDir, { recursive: true, force: true })
+      }
+    } catch (error) {
+      // Ignore cleanup errors - directory might not exist
+    }
   })
 
   describe('Configuration', () => {
@@ -149,7 +156,7 @@ This is a test template with frontmatter.`
       assert.ok(targetFiles.includes('frontmatter-test.mdc'))
 
       const processedContent = await fs.readFile(path.join(targetDir, 'frontmatter-test.mdc'), 'utf-8')
-      
+
       // Should have transformed applyTo to globs
       assert.ok(processedContent.includes('globs: "**/*.js,**/*.ts"'))
       assert.ok(!processedContent.includes('applyTo:'))
@@ -177,12 +184,12 @@ This template has multiple frontmatter fields.`
       await adapter.processInstructions(scaffoldInstructions, templateDir, targetDir)
 
       const processedContent = await fs.readFile(path.join(targetDir, 'multi-field.mdc'), 'utf-8')
-      
+
       // Should transform only applyTo field
       assert.ok(processedContent.includes('globs: "**/*.test.js,**/*.test.ts"'))
       assert.ok(!processedContent.includes('applyTo:'))
-      assert.ok(processedContent.includes('description: "Testing guidelines"'))
-      assert.ok(processedContent.includes('version: "1.0.0"'))
+      assert.ok(processedContent.includes('description: Testing guidelines'))
+      assert.ok(processedContent.includes('version: 1.0.0'))
     })
 
     it('should handle files without frontmatter unchanged', async () => {
@@ -202,7 +209,7 @@ Just plain markdown content.`
       await adapter.processInstructions(scaffoldInstructions, templateDir, targetDir)
 
       const processedContent = await fs.readFile(path.join(targetDir, 'no-frontmatter.mdc'), 'utf-8')
-      
+
       // Content should remain exactly the same
       assert.strictEqual(processedContent, templateContent)
     })
@@ -226,7 +233,7 @@ This should still work.`
       await adapter.processInstructions(scaffoldInstructions, templateDir, targetDir)
 
       const processedContent = await fs.readFile(path.join(targetDir, 'malformed.mdc'), 'utf-8')
-      
+
       // Should return original content when frontmatter is malformed
       assert.strictEqual(processedContent, templateContent)
     })
@@ -249,7 +256,7 @@ This template has empty frontmatter.`
       await adapter.processInstructions(scaffoldInstructions, templateDir, targetDir)
 
       const processedContent = await fs.readFile(path.join(targetDir, 'empty-frontmatter.mdc'), 'utf-8')
-      
+
       // Should preserve the structure
       assert.ok(processedContent.includes('---\n---'))
       assert.ok(processedContent.includes('# Template with empty frontmatter'))
@@ -276,7 +283,7 @@ This tests YAML array format for applyTo field.`
       await adapter.processInstructions(scaffoldInstructions, templateDir, targetDir)
 
       const processedContent = await fs.readFile(path.join(targetDir, 'yaml-array.mdc'), 'utf-8')
-      
+
       // Should transform the field name while preserving the YAML structure
       assert.ok(processedContent.includes('globs:'))
       assert.ok(!processedContent.includes('applyTo:'))
