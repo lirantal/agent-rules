@@ -1,0 +1,22 @@
+{
+  "servers": {
+    "micromark-frontmatter-extension Docs": {
+      "url": "https://gitmcp.io/micromark/micromark-extension-frontmatter",
+      "type": "sse"
+    },
+    "mdast-util-from-markdown Docs": {
+      "type": "sse",
+      "url": "https://gitmcp.io/syntax-tree/mdast-util-from-markdown"
+    },
+    "micromark-extension-frontmatter Docs": {
+      "url": "https://gitmcp.io/micromark/micromark-extension-frontmatter"
+    },
+    "yaml Docs": {
+      "url": "https://gitmcp.io/eemeli/yaml"
+    },
+    "mdast-util-to-markdown Docs": {
+      "url": "https://gitmcp.io/syntax-tree/mdast-util-to-markdown"
+    }
+  },
+  "inputs": []
+}
