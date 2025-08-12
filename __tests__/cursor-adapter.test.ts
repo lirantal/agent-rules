@@ -125,6 +125,166 @@ describe('CursorAdapter', () => {
     })
   })
 
+  describe('Frontmatter Processing', () => {
+    it('should transform applyTo field to globs field in frontmatter', async () => {
+      const templateContent = `---
+applyTo: "**/*.js,**/*.ts"
+---
+
+# Test Template
+This is a test template with frontmatter.`
+
+      await fs.writeFile(path.join(templateDir, 'frontmatter-test.md'), templateContent, 'utf-8')
+
+      const scaffoldInstructions: ScaffoldInstructions = {
+        aiApp: 'cursor',
+        codeLanguage: 'nodejs',
+        codeTopic: 'secure-code'
+      }
+
+      await adapter.processInstructions(scaffoldInstructions, templateDir, targetDir)
+
+      const targetFiles = await fs.readdir(targetDir)
+      assert.strictEqual(targetFiles.length, 1)
+      assert.ok(targetFiles.includes('frontmatter-test.mdc'))
+
+      const processedContent = await fs.readFile(path.join(targetDir, 'frontmatter-test.mdc'), 'utf-8')
+      
+      // Should have transformed applyTo to globs
+      assert.ok(processedContent.includes('globs: "**/*.js,**/*.ts"'))
+      assert.ok(!processedContent.includes('applyTo:'))
+      assert.ok(processedContent.includes('# Test Template'))
+    })
+
+    it('should handle frontmatter with multiple fields correctly', async () => {
+      const templateContent = `---
+applyTo: "**/*.test.js,**/*.test.ts"
+description: "Testing guidelines"
+version: "1.0.0"
+---
+
+# Testing Template
+This template has multiple frontmatter fields.`
+
+      await fs.writeFile(path.join(templateDir, 'multi-field.md'), templateContent, 'utf-8')
+
+      const scaffoldInstructions: ScaffoldInstructions = {
+        aiApp: 'cursor',
+        codeLanguage: 'nodejs',
+        codeTopic: 'testing'
+      }
+
+      await adapter.processInstructions(scaffoldInstructions, templateDir, targetDir)
+
+      const processedContent = await fs.readFile(path.join(targetDir, 'multi-field.mdc'), 'utf-8')
+      
+      // Should transform only applyTo field
+      assert.ok(processedContent.includes('globs: "**/*.test.js,**/*.test.ts"'))
+      assert.ok(!processedContent.includes('applyTo:'))
+      assert.ok(processedContent.includes('description: "Testing guidelines"'))
+      assert.ok(processedContent.includes('version: "1.0.0"'))
+    })
+
+    it('should handle files without frontmatter unchanged', async () => {
+      const templateContent = `# Simple Template
+This template has no frontmatter.
+
+Just plain markdown content.`
+
+      await fs.writeFile(path.join(templateDir, 'no-frontmatter.md'), templateContent, 'utf-8')
+
+      const scaffoldInstructions: ScaffoldInstructions = {
+        aiApp: 'cursor',
+        codeLanguage: 'nodejs',
+        codeTopic: 'simple'
+      }
+
+      await adapter.processInstructions(scaffoldInstructions, templateDir, targetDir)
+
+      const processedContent = await fs.readFile(path.join(targetDir, 'no-frontmatter.mdc'), 'utf-8')
+      
+      // Content should remain exactly the same
+      assert.strictEqual(processedContent, templateContent)
+    })
+
+    it('should handle malformed frontmatter gracefully', async () => {
+      const templateContent = `---
+applyTo: "**/*.js
+missing closing quote and no end marker
+
+# Template with malformed frontmatter
+This should still work.`
+
+      await fs.writeFile(path.join(templateDir, 'malformed.md'), templateContent, 'utf-8')
+
+      const scaffoldInstructions: ScaffoldInstructions = {
+        aiApp: 'cursor',
+        codeLanguage: 'nodejs',
+        codeTopic: 'error-handling'
+      }
+
+      await adapter.processInstructions(scaffoldInstructions, templateDir, targetDir)
+
+      const processedContent = await fs.readFile(path.join(targetDir, 'malformed.mdc'), 'utf-8')
+      
+      // Should return original content when frontmatter is malformed
+      assert.strictEqual(processedContent, templateContent)
+    })
+
+    it('should handle empty frontmatter sections', async () => {
+      const templateContent = `---
+---
+
+# Template with empty frontmatter
+This template has empty frontmatter.`
+
+      await fs.writeFile(path.join(templateDir, 'empty-frontmatter.md'), templateContent, 'utf-8')
+
+      const scaffoldInstructions: ScaffoldInstructions = {
+        aiApp: 'cursor',
+        codeLanguage: 'nodejs',
+        codeTopic: 'empty'
+      }
+
+      await adapter.processInstructions(scaffoldInstructions, templateDir, targetDir)
+
+      const processedContent = await fs.readFile(path.join(targetDir, 'empty-frontmatter.mdc'), 'utf-8')
+      
+      // Should preserve the structure
+      assert.ok(processedContent.includes('---\n---'))
+      assert.ok(processedContent.includes('# Template with empty frontmatter'))
+    })
+
+    it('should handle frontmatter with different YAML value formats', async () => {
+      const templateContent = `---
+applyTo: 
+  - "**/*.js"
+  - "**/*.ts"
+---
+
+# YAML Array Format
+This tests YAML array format for applyTo field.`
+
+      await fs.writeFile(path.join(templateDir, 'yaml-array.md'), templateContent, 'utf-8')
+
+      const scaffoldInstructions: ScaffoldInstructions = {
+        aiApp: 'cursor',
+        codeLanguage: 'nodejs',
+        codeTopic: 'yaml-format'
+      }
+
+      await adapter.processInstructions(scaffoldInstructions, templateDir, targetDir)
+
+      const processedContent = await fs.readFile(path.join(targetDir, 'yaml-array.mdc'), 'utf-8')
+      
+      // Should transform the field name while preserving the YAML structure
+      assert.ok(processedContent.includes('globs:'))
+      assert.ok(!processedContent.includes('applyTo:'))
+      assert.ok(processedContent.includes('- "**/*.js"'))
+      assert.ok(processedContent.includes('- "**/*.ts"'))
+    })
+  })
+
   describe('Security', () => {
     it('should prevent path traversal attacks', async () => {
       // This test ensures that the security validation is working

@@ -1,6 +1,10 @@
 import path from 'node:path'
 import fs from 'node:fs/promises'
 import { debuglog } from 'node:util'
+import { fromMarkdown } from 'mdast-util-from-markdown'
+import { toMarkdown } from 'mdast-util-to-markdown'
+import { frontmatter } from 'micromark-extension-frontmatter'
+import { frontmatterFromMarkdown, frontmatterToMarkdown } from 'mdast-util-frontmatter'
 import { BaseAdapter, type AiAppConfig, type ScaffoldInstructions } from './base-adapter.js'
 
 const debug = debuglog('agent-rules')
@@ -78,8 +82,11 @@ export class CursorAdapter extends BaseAdapter {
         // Read the template file content
         const templateContent = await fs.readFile(fullTemplatePath, 'utf-8')
 
+        // Process the content to transform frontmatter if needed
+        const processedContent = this.processFrontmatter(templateContent)
+
         // Write to the target location
-        await fs.writeFile(resolvedTargetFilePath, templateContent, 'utf-8')
+        await fs.writeFile(resolvedTargetFilePath, processedContent, 'utf-8')
       }
     } catch (error) {
       console.warn(`Skipping file ${sanitizedTemplateFile}: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -99,6 +106,53 @@ export class CursorAdapter extends BaseAdapter {
     }
 
     return `${baseName}${filesSuffix}`
+  }
+
+  /**
+   * Process markdown content to transform frontmatter from template format to Cursor format
+   */
+  private processFrontmatter (content: string): string {
+    try {
+      // Parse markdown content into AST using mdast-util-from-markdown with frontmatter support
+      const ast = fromMarkdown(content, {
+        extensions: [frontmatter(['yaml'])],
+        mdastExtensions: [frontmatterFromMarkdown(['yaml'])]
+      })
+
+      // Find and transform frontmatter nodes
+      let hasTransformations = false
+      for (const node of ast.children) {
+        if (node.type === 'yaml') {
+          const transformedValue = this.transformFrontmatterFields(node.value)
+          if (transformedValue !== node.value) {
+            node.value = transformedValue
+            hasTransformations = true
+          }
+        }
+      }
+
+      // If we made transformations, convert back to markdown
+      if (hasTransformations) {
+        return toMarkdown(ast, {
+          extensions: [frontmatterToMarkdown(['yaml'])]
+        })
+      }
+
+      // No frontmatter or no transformations needed, return original content
+      return content
+    } catch (error) {
+      debug('Error processing frontmatter with AST:', error)
+      // If there's any error, return the original content
+      return content
+    }
+  }
+
+  /**
+   * Transform frontmatter fields from template format to Cursor format using structured approach
+   */
+  private transformFrontmatterFields (frontmatterValue: string): string {
+    // Transform 'applyTo' field to 'globs' field
+    return frontmatterValue.replace(/^applyTo:\s*(.+)$/gm, 'globs: $1')
   }
 
   /**
