@@ -342,6 +342,90 @@ Before submitting your adapter:
 3. Test with real templates and verify output
 4. Test error scenarios (missing files, permissions, etc.)
 5. Test frontmatter processing with various YAML formats and edge cases
+6. **Add end-to-end integration tests** (Required for all new adapters)
+
+### End-to-End Integration Testing Requirements
+
+**All new adapters MUST include comprehensive end-to-end integration tests** in `__tests__/integration.test.ts`. These tests should verify the complete workflow from `scaffoldAiAppInstructions()` through your adapter to final file output.
+
+**Required Integration Test Cases:**
+
+1. **Fresh Scaffolding Test**: Test complete workflow in empty directory
+   ```typescript
+   test('should successfully scaffold [YourAdapter] [topic] instructions', async () => {
+     // Verify directory structure creation
+     // Verify template files copied correctly  
+     // Verify any special files created (e.g., main context files)
+     // Verify content preservation from templates
+   })
+   ```
+
+2. **Existing File Management Test**: Test handling of existing files/content
+   ```typescript
+   test('should append/merge with existing [YourAdapter] files without conflicts', async () => {
+     // Create existing content first
+     // Run scaffolding
+     // Verify existing content preserved + new content added
+   })
+   ```
+
+3. **Multiple Topic Test**: Test scaffolding multiple topics sequentially
+   ```typescript
+   test('should handle multiple topic scaffolding correctly', async () => {
+     // Scaffold topic A, then topic B
+     // Verify both topics handled correctly
+     // Verify no conflicts between topics
+   })
+   ```
+
+4. **Duplicate Prevention Test**: Test running same scaffolding twice
+   ```typescript
+   test('should not duplicate content when scaffolding same topic twice', async () => {
+     // Run same scaffolding operation twice
+     // Verify no duplicate content/imports/sections
+   })
+   ```
+
+5. **Error Handling Test**: Test graceful error handling
+   ```typescript
+   test('should handle [YourAdapter] scaffolding errors gracefully', async () => {
+     // Test with various error conditions
+     // Verify no unhandled exceptions
+     // Verify partial recovery when possible
+   })
+   ```
+
+**Why End-to-End Tests Are Required:**
+
+- **Catch Integration Issues**: Unit tests mock file systems; integration tests use real files
+- **Verify Complete Workflow**: Test the actual `scaffoldAiAppInstructions()` path users will take
+- **Prevent Manual Testing**: Eliminate need for manual `/tmp` directory testing
+- **Regression Protection**: Ensure future changes don't break existing functionality
+- **Validate Real File Operations**: Confirm actual directory structures and file content
+
+**Integration Test Pattern:**
+```typescript
+// In __tests__/integration.test.ts, add to 'End-to-End Scaffolding' describe block
+test('should successfully scaffold [YourAdapter] [topic] instructions', async () => {
+  // Arrange
+  process.chdir(tempDir)
+  const scaffoldInstructions = {
+    aiApp: 'your-adapter',
+    codeLanguage: 'nodejs', 
+    codeTopic: 'secure-code'
+  }
+
+  // Act  
+  await scaffoldAiAppInstructions(scaffoldInstructions)
+
+  // Assert - Verify directory structure, files, content preservation
+  const targetDir = path.join(tempDir, 'expected/directory')
+  const files = await fs.readdir(targetDir)
+  // ... comprehensive assertions
+})
+```
+
+See existing Claude Code integration tests in `__tests__/integration.test.ts` as a reference implementation.
 
 ## Example: Complete Adapter Implementations
 
