@@ -41,6 +41,15 @@ describe('Agent Rules CLI', () => {
       })
     })
 
+    test('should return correct config for claude-code', () => {
+      const result = getAiAppDirectory('claude-code')
+
+      assert.deepStrictEqual(result, {
+        directory: '.claude/rules',
+        filesSuffix: '.md'
+      })
+    })
+
     test('should throw error for unsupported AI app', () => {
       assert.throws(
         () => getAiAppDirectory('unsupported-app'),

@@ -9,16 +9,19 @@ describe('AdapterRegistry Integration', () => {
     assert.ok(Array.isArray(supportedApps))
     assert.ok(supportedApps.includes('github-copilot'))
     assert.ok(supportedApps.includes('cursor'))
-    assert.strictEqual(supportedApps.length, 2)
+    assert.ok(supportedApps.includes('claude-code'))
+    assert.strictEqual(supportedApps.length, 3)
   })
 
   it('should create correct adapter instances', () => {
     const githubAdapter = AdapterRegistry.getAdapter('github-copilot')
     const cursorAdapter = AdapterRegistry.getAdapter('cursor')
+    const claudeAdapter = AdapterRegistry.getAdapter('claude-code')
 
     // Verify configurations
     const githubConfig = githubAdapter.getConfig()
     const cursorConfig = cursorAdapter.getConfig()
+    const claudeConfig = claudeAdapter.getConfig()
 
     assert.deepStrictEqual(githubConfig, {
       directory: '.github/instructions',
@@ -28,6 +31,11 @@ describe('AdapterRegistry Integration', () => {
     assert.deepStrictEqual(cursorConfig, {
       directory: '.cursor/rules',
       filesSuffix: '.mdc'
+    })
+
+    assert.deepStrictEqual(claudeConfig, {
+      directory: '.claude/rules',
+      filesSuffix: '.md'
     })
   })
 

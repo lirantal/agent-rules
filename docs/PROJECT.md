@@ -36,6 +36,7 @@ The project is structured as a monorepo with the following key components:
     - **`base-adapter.ts`**: Abstract base class defining the adapter interface.
     - **`github-copilot-adapter.ts`**: GitHub Copilot-specific implementation with direct file copying.
     - **`cursor-adapter.ts`**: Cursor-specific implementation with advanced frontmatter processing and transformation.
+    - **`claude-code-adapter.ts`**: Claude Code-specific implementation with main context file management and @ imports.
     - **`adapter-registry.ts`**: Registry for managing adapter instances.
     - **`index.ts`**: Module exports for the adapters.
 - **`__template__/`**: Contains the template files for the agentic rules, organized by programming language and topic. Templates can include YAML frontmatter for metadata and processing instructions.

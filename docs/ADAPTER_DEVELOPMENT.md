@@ -19,6 +19,7 @@ The `agent-rules` project uses an adapter pattern to support multiple AI coding 
 
 - **`GitHubCopilotAdapter`**: Handles GitHub Copilot instruction generation with direct file copying
 - **`CursorAdapter`**: Handles Cursor instruction generation with frontmatter transformation
+- **`ClaudeCodeAdapter`**: Handles Claude Code instruction generation with main context file management and @ imports
 
 ### Dependencies for Frontmatter Processing
 
@@ -178,7 +179,41 @@ async processInstructions(...) {
 }
 ```
 
-### 4. Frontmatter Processing (Cursor Pattern)
+### 4. Main Context File Management (Claude Code Pattern)
+
+For AI apps that need main context files with @ imports:
+
+```typescript
+async processInstructions(...) {
+  // Copy template files to target directory
+  await this.copyTemplateFiles(resolvedTemplateDirectory, resolvedTargetDirectory, this.config.filesSuffix)
+  
+  // Update main context file with imports
+  await this.updateMainContextFile(scaffoldInstructions, resolvedTemplateDirectory, resolvedTargetDirectory)
+}
+
+private async updateMainContextFile(...) {
+  // Read existing main file or create new
+  const mainFilePath = path.join(projectRoot, 'MAIN_FILE.md')
+  let content = ''
+  try {
+    content = await fs.readFile(mainFilePath, 'utf-8')
+  } catch {
+    // File doesn't exist, will create new
+  }
+  
+  // Generate imports
+  const imports = templateFiles.map(file => `- @./target/directory/${file}`)
+  
+  // Add category and imports with duplicate detection
+  const updatedContent = this.addImportsToContent(content, categoryLabel, imports)
+  
+  // Write back to main file
+  await fs.writeFile(mainFilePath, updatedContent, 'utf-8')
+}
+```
+
+### 5. Frontmatter Processing (Cursor Pattern)
 
 For AI apps that need to transform template frontmatter metadata:
 
@@ -312,5 +347,6 @@ Before submitting your adapter:
 
 - **Simple Processing**: See `src/adapters/github-copilot-adapter.ts` for direct file copying
 - **Advanced Processing**: See `src/adapters/cursor-adapter.ts` for frontmatter transformation with AST parsing
+- **Main Context File Management**: See `src/adapters/claude-code-adapter.ts` for main context file management with @ imports
 
-Both provide complete, production-ready adapter implementations that demonstrate the concepts covered in this guide.
+All provide complete, production-ready adapter implementations that demonstrate the concepts covered in this guide.

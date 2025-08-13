@@ -1,4 +1,5 @@
 export { BaseAdapter, type AiAppConfig, type ScaffoldInstructions } from './base-adapter.js'
 export { GitHubCopilotAdapter } from './github-copilot-adapter.js'
 export { CursorAdapter } from './cursor-adapter.js'
+export { ClaudeCodeAdapter } from './claude-code-adapter.js'
 export { AdapterRegistry } from './adapter-registry.js'

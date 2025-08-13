@@ -79,6 +79,19 @@ The project has the following key dependencies:
 - Each AI app adapter must be able to process templates according to its specific requirements.
 - The system must support different processing strategies per AI app (e.g., direct copy, transformation, etc.).
 
+### Main Context File Management
+
+**Capability:** The project must support AI apps that require main context files with automatic import management.
+
+**Acceptance Criteria:**
+
+- The system must be able to create and update main context files (e.g., `CLAUDE.md`) at the project root.
+- The system must support @ import syntax for referencing template files (e.g., `@./.claude/rules/filename.md`).
+- The system must organize imports by topic categories with user-friendly labels.
+- The system must implement duplicate detection to avoid redundant imports when processing the same topic multiple times.
+- The system must preserve existing content in main context files while appending new imports.
+- The system must support both creation of new main context files and updating of existing ones.
+
 ### Template Frontmatter Processing
 
 **Capability:** The project must support advanced frontmatter processing to transform template metadata for different AI app requirements.

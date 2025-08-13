@@ -40,8 +40,8 @@ The project follows a layered architecture with an adapter pattern:
 |                    Adapter Layer                   |
 |                                                    |
 | +----------------+ +----------------+ +---------+  |
-| | GitHubCopilot  | |  Future AI     | |   ...   |  |
-| |   Adapter      | |   Adapters     | |         |  |
+| | GitHubCopilot  | |   Cursor       | | Claude  |  |
+| |   Adapter      | |   Adapter      | |  Code   |  |
 | +----------------+ +----------------+ +---------+  |
 |                                                    |
 +----------------------------------------------------+
@@ -103,7 +103,17 @@ The project follows a layered architecture with an adapter pattern:
   - Uses structured YAML parsing for accurate field manipulation while preserving other frontmatter content.
   - Applies Cursor naming conventions (`.mdc` extension) and directory structure (`.cursor/rules`).
 
-#### 2.3.4. `AdapterRegistry`
+#### 2.3.4. `ClaudeCodeAdapter`
+- **Component**: Concrete adapter for Claude Code AI coding assistant.
+- **Responsibilities**:
+  - Implements Claude Code-specific template processing with main context file management.
+  - Copies template files to `.claude/rules` directory with secure path validation.
+  - Manages `CLAUDE.md` main context file with @ imports organized by topic categories.
+  - Implements duplicate detection and smart content appending for existing context files.
+  - Maps internal topic identifiers to user-friendly category labels.
+  - Applies Claude Code naming conventions (`.md` extension) and directory structure (`.claude/rules`).
+
+#### 2.3.5. `AdapterRegistry`
 - **Component**: Registry for managing adapter instances.
 - **Responsibilities**:
   - Maps AI app identifiers to their corresponding adapters.
@@ -146,6 +156,13 @@ version: "1.0.0"
 - Transforms `applyTo` field to `globs` field for Cursor compatibility
 - Preserves YAML structure and formatting using structured parsing
 - Maintains proper markdown AST processing for reliable output
+
+#### 2.5.4. Claude Code-Specific Processing
+- Copies template files without frontmatter transformation (preserves original format)
+- Generates main context file (`CLAUDE.md`) with @ imports for template inclusion
+- Organizes imports by topic categories with user-friendly labels
+- Implements duplicate detection to avoid redundant imports
+- Uses simple string-based content management for efficient processing
 
 ## 3. Data Models
 
@@ -193,9 +210,43 @@ abstract class BaseAdapter {
 }
 ```
 
-## 4. APIs
+## 4. Supported AI Apps
 
-### 4.1. Core Application API
+The project currently supports three AI coding assistants, each with unique characteristics and processing requirements:
+
+### 4.1. GitHub Copilot
+- **Identifier**: `github-copilot`
+- **Directory**: `.github/instructions`
+- **File Extension**: `.instructions.md`
+- **Processing Strategy**: Direct file copying with secure path validation
+- **Use Case**: Simple instruction files for GitHub Copilot workspace integration
+
+### 4.2. Cursor
+- **Identifier**: `cursor`
+- **Directory**: `.cursor/rules`
+- **File Extension**: `.mdc`
+- **Processing Strategy**: Advanced frontmatter transformation with AST parsing
+- **Special Features**: 
+  - Transforms `applyTo` field to `globs` field in YAML frontmatter
+  - Preserves non-transformed frontmatter content
+  - Uses structured YAML processing for accuracy
+- **Use Case**: Rule files for Cursor AI coding assistant with metadata transformation
+
+### 4.3. Claude Code
+- **Identifier**: `claude-code`
+- **Directory**: `.claude/rules`
+- **File Extension**: `.md`
+- **Processing Strategy**: Main context file management with @ imports
+- **Special Features**:
+  - Creates/updates main `CLAUDE.md` context file at project root
+  - Organizes imports by topic categories with user-friendly labels
+  - Implements duplicate detection to avoid redundant imports
+  - Uses @ syntax for file imports (e.g., `@./.claude/rules/filename.md`)
+- **Use Case**: Rule files for Claude Code with automatic context file management
+
+## 5. APIs
+
+### 5.1. Core Application API
 
 #### `scaffoldAiAppInstructions(scaffoldInstructions: ScaffoldInstructions): Promise<void>`
 
@@ -210,7 +261,7 @@ abstract class BaseAdapter {
   3. Resolves template and target directories
   4. Delegates processing to the adapter
 
-### 4.2. Adapter Registry API
+### 5.2. Adapter Registry API
 
 #### `AdapterRegistry.getAdapter(aiApp: string): BaseAdapter`
 
@@ -225,7 +276,7 @@ abstract class BaseAdapter {
 - **Description**: Returns a list of all supported AI app identifiers.
 - **Returns**: Array of supported AI app strings
 
-### 4.3. Adapter Interface
+### 5.3. Adapter Interface
 
 #### `BaseAdapter.processInstructions(scaffoldInstructions, resolvedTemplateDirectory, resolvedTargetDirectory): Promise<void>`
 
@@ -236,16 +287,16 @@ abstract class BaseAdapter {
   - `resolvedTargetDirectory`: Path to the target destination
 - **Returns**: Promise that resolves when processing is complete
 
-## 5. Error Handling
+## 6. Error Handling
 
 - **User Cancellation**: The CLI should handle user cancellation gracefully by exiting the process without an error.
 - **Invalid Input**: The CLI should validate user input and display an error message if the input is invalid.
 - **File System Errors**: The application should handle file system errors, such as permission errors or missing files, by displaying an error message to the user.
 - **Template Not Found**: The application should throw an error if the template directory cannot be found.
 
-## 6. Testing Strategy
+## 7. Testing Strategy
 
-### 6.1. Unit Tests
+### 7.1. Unit Tests
 - **Adapter Tests**: Each adapter class should have comprehensive unit tests covering:
   - Configuration validation
   - Template processing logic
@@ -256,19 +307,19 @@ abstract class BaseAdapter {
   - Error handling for unsupported AI apps
   - Listing supported AI apps
 
-### 6.2. Integration Tests
+### 7.2. Integration Tests
 - **Core Logic Integration**: Test the interaction between `main.ts` and the adapter layer
 - **Template Resolution**: Test template directory resolution and validation
 - **End-to-End Workflows**: Test complete scaffolding workflows for each supported AI app
 
-### 6.3. End-to-End Tests
+### 7.3. End-to-End Tests
 - **CLI Integration**: Test the entire application from command line invocation
 - **File System Operations**: Verify correct file creation and directory structure
 - **Error Scenarios**: Test error handling for various failure modes
 
-## 7. Implementation Considerations
+## 8. Implementation Considerations
 
-### 7.1. Extensibility
+### 8.1. Extensibility
 - **Adapter Pattern**: The project uses the adapter pattern to make adding new AI apps straightforward
 - **New AI App Support**: To add a new AI app:
   1. Create a new adapter class extending `BaseAdapter`
@@ -276,26 +327,33 @@ abstract class BaseAdapter {
   3. Register the adapter in `AdapterRegistry`
   4. Add corresponding tests
 
-### 7.2. Maintainability
+### 8.2. Maintainability
 - **Clear Separation of Concerns**: Each adapter handles only its specific AI app logic
 - **Frontmatter Processing Pipeline**: The frontmatter processing system is designed with clear separation:
   - AST parsing for reliable markdown structure handling
   - Structured YAML processing for accurate data manipulation
   - Fallback mechanisms for error resilience
   - Field transformation logic isolated in dedicated methods
+- **Main Context File Management**: The main context file system provides:
+  - Smart content appending without overwriting existing content
+  - Duplicate detection to prevent redundant imports
+  - Topic-based categorization with user-friendly labels
+  - Flexible @ import syntax for file references
 - **OOP Design**: Class-based architecture makes code easier to understand and maintain
 - **Type Safety**: Full TypeScript typing ensures compile-time error detection
 - **Documentation**: Code is well-documented with clear responsibilities
 
-### 7.3. Performance
+### 8.3. Performance
 - **Lazy Loading**: Adapters are instantiated only when needed
 - **Efficient File Operations**: Minimized file system calls
 - **AST Caching**: Markdown AST parsing is performed only when transformations are needed
 - **Conditional Processing**: Frontmatter transformation is skipped when no changes are required
+- **Main Context File Optimization**: Content updates use string-based processing for efficiency
+- **Duplicate Detection**: Smart import checking prevents unnecessary file operations
 - **Memory Management**: Large files are processed streaming-style to minimize memory usage
 - **Error Recovery**: Graceful handling of file operation failures
 
-### 7.4. Development Guidelines
+### 8.4. Development Guidelines
 
 #### Adding a New Adapter
 1. **Create Adapter Class**: Extend `BaseAdapter` in `src/adapters/`
