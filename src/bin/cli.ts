@@ -1,12 +1,127 @@
 #!/usr/bin/env node
 
 import { intro, outro, select, multiselect } from '@clack/prompts'
-import { styleText, debuglog } from 'node:util'
+import { styleText, debuglog, parseArgs } from 'node:util'
+import { readFile } from 'node:fs/promises'
+import { resolve, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { scaffoldAiAppInstructions } from '../main.js'
+import { AdapterRegistry } from '../adapters/index.js'
 
 const debug = debuglog('agent-rules')
 
-async function init () {
+// Available options for validation
+const AVAILABLE_TOPICS = ['secure-code', 'security-vulnerabilities', 'testing']
+const AVAILABLE_APPS = AdapterRegistry.getSupportedAiApps()
+
+interface CliArgs {
+  app?: string
+  topics?: string[]
+  help?: boolean
+  version?: boolean
+}
+
+function parseCommandLineArgs (): CliArgs {
+  try {
+    const { values } = parseArgs({
+      args: process.argv.slice(2),
+      options: {
+        app: {
+          type: 'string',
+          short: 'a'
+        },
+        topics: {
+          type: 'string',
+          multiple: true,
+          short: 't'
+        },
+        help: {
+          type: 'boolean',
+          short: 'h'
+        },
+        version: {
+          type: 'boolean',
+          short: 'v'
+        }
+      },
+      allowPositionals: false
+    })
+
+    return {
+      app: values.app,
+      topics: values.topics,
+      help: values.help,
+      version: values.version
+    }
+  } catch (error: any) {
+    console.error('Error parsing command line arguments:', error.message)
+    showHelp()
+    // eslint-disable-next-line n/no-process-exit
+    process.exit(1)
+  }
+}
+
+function showHelp (): void {
+  console.log(`
+Usage: agent-rules [options]
+
+Options:
+  -a, --app <app>         AI app to generate rules for (${AVAILABLE_APPS.join(', ')})
+  -t, --topics <topics>   Topics to generate rules for (${AVAILABLE_TOPICS.join(', ')})
+                          Can be specified multiple times: --topics secure-code --topics testing
+  -h, --help              Show this help message
+  -v, --version           Show version number
+
+Examples:
+  agent-rules                                    # Interactive mode
+  agent-rules --app cursor --topics secure-code  # Generate secure coding rules for Cursor
+  agent-rules -a github-copilot -t testing -t secure-code # Multiple topics
+
+Available AI Apps: ${AVAILABLE_APPS.join(', ')}
+Available Topics: ${AVAILABLE_TOPICS.join(', ')}
+`)
+}
+
+async function showVersion (): Promise<void> {
+  try {
+    const __filename = fileURLToPath(import.meta.url)
+    const __dirname = dirname(__filename)
+    const packageJsonPath = resolve(__dirname, '../../package.json')
+    const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf-8'))
+    console.log(packageJson.version)
+  } catch (error) {
+    console.error('Error reading version:', error)
+    // eslint-disable-next-line n/no-process-exit
+    process.exit(1)
+  }
+}
+
+function validateCliArgs (args: CliArgs): void {
+  if (args.app && !AVAILABLE_APPS.includes(args.app)) {
+    console.error(`Error: Invalid app "${args.app}". Available apps: ${AVAILABLE_APPS.join(', ')}`)
+    // eslint-disable-next-line n/no-process-exit
+    process.exit(1)
+  }
+
+  if (args.topics) {
+    const invalidTopics = args.topics.filter(topic => !AVAILABLE_TOPICS.includes(topic))
+    if (invalidTopics.length > 0) {
+      console.error(`Error: Invalid topics "${invalidTopics.join(', ')}". Available topics: ${AVAILABLE_TOPICS.join(', ')}`)
+      // eslint-disable-next-line n/no-process-exit
+      process.exit(1)
+    }
+  }
+
+  // If one CLI arg is provided, both should be provided for non-interactive mode
+  if ((args.app && !args.topics) || (!args.app && args.topics)) {
+    console.error('Error: When using command line flags, both --app and --topics must be specified')
+    showHelp()
+    // eslint-disable-next-line n/no-process-exit
+    process.exit(1)
+  }
+}
+
+async function initInteractive () {
   intro(styleText(['bgMagentaBright', 'black'], ' Agent, rules!'))
 
   // Hard-coding the code language for now
@@ -49,7 +164,27 @@ async function init () {
 
   for (const codeTopic of topicChoices) {
     const templateChoices = {
-      aiApp,
+      aiApp: aiApp as string,
+      codeLanguage,
+      codeTopic: codeTopic as string
+    }
+
+    await scaffoldAiAppInstructions(templateChoices)
+  }
+
+  outro('Aye Captain, godspeed with yar vibe coding 🫡')
+}
+
+async function initWithCliArgs (args: CliArgs) {
+  // Hard-coding the code language for now
+  const codeLanguage = 'nodejs'
+
+  debug('CLI mode - Selected AI App:', args.app)
+  debug('CLI mode - Selected code topics:', args.topics?.join(', '))
+
+  for (const codeTopic of args.topics!) {
+    const templateChoices = {
+      aiApp: args.app!,
       codeLanguage,
       codeTopic
     }
@@ -57,7 +192,31 @@ async function init () {
     await scaffoldAiAppInstructions(templateChoices)
   }
 
-  outro('Aye Captain, godspeed with yar vibe coding 🫡')
+  console.log('✅ Agent rules generated successfully!')
+}
+
+async function init () {
+  const args = parseCommandLineArgs()
+
+  // Handle help and version flags
+  if (args.help) {
+    showHelp()
+    return
+  }
+
+  if (args.version) {
+    await showVersion()
+    return
+  }
+
+  // Validate CLI arguments if provided
+  if (args.app || args.topics) {
+    validateCliArgs(args)
+    await initWithCliArgs(args)
+  } else {
+    // Fall back to interactive mode
+    await initInteractive()
+  }
 }
 
 async function main () {

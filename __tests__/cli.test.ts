@@ -120,4 +120,156 @@ describe('CLI Application', () => {
       assert.ok(typeof testingContent === 'string', 'template file should be readable as text')
     })
   })
+
+  describe('CLI Command Line Arguments', () => {
+    test('should show help when --help flag is provided', () => {
+      const result = spawnSync('node', ['dist/bin/cli.mjs', '--help'], {
+        encoding: 'utf8',
+        timeout: 5000
+      })
+
+      assert.strictEqual(result.status, 0, 'Should exit successfully')
+      assert.ok(result.stdout.includes('Usage: agent-rules'), 'Should show usage information')
+      assert.ok(result.stdout.includes('--app'), 'Should show app option')
+      assert.ok(result.stdout.includes('--topics'), 'Should show topics option')
+      assert.ok(result.stdout.includes('Available AI Apps:'), 'Should list available AI apps')
+      assert.ok(result.stdout.includes('Available Topics:'), 'Should list available topics')
+    })
+
+    test('should show version when --version flag is provided', () => {
+      const result = spawnSync('node', ['dist/bin/cli.mjs', '--version'], {
+        encoding: 'utf8',
+        timeout: 5000
+      })
+
+      assert.strictEqual(result.status, 0, 'Should exit successfully')
+      assert.match(result.stdout.trim(), /^\d+\.\d+\.\d+$/, 'Should show version number in semver format')
+    })
+
+    test('should work with short flags -h and -v', () => {
+      const helpResult = spawnSync('node', ['dist/bin/cli.mjs', '-h'], {
+        encoding: 'utf8',
+        timeout: 5000
+      })
+
+      const versionResult = spawnSync('node', ['dist/bin/cli.mjs', '-v'], {
+        encoding: 'utf8',
+        timeout: 5000
+      })
+
+      assert.strictEqual(helpResult.status, 0, 'Should handle -h flag')
+      assert.ok(helpResult.stdout.includes('Usage:'), 'Should show help with -h')
+
+      assert.strictEqual(versionResult.status, 0, 'Should handle -v flag')
+      assert.match(versionResult.stdout.trim(), /^\d+\.\d+\.\d+$/, 'Should show version with -v')
+    })
+
+    test('should accept valid app and topics combination', () => {
+      const result = spawnSync('node', ['dist/bin/cli.mjs', '--app', 'cursor', '--topics', 'testing'], {
+        encoding: 'utf8',
+        timeout: 10000
+      })
+
+      assert.strictEqual(result.status, 0, 'Should succeed with valid arguments')
+      assert.ok(result.stdout.includes('✅ Agent rules generated successfully!'), 'Should show success message')
+    })
+
+    test('should accept multiple topics', () => {
+      const result = spawnSync('node', ['dist/bin/cli.mjs', '--app', 'github-copilot', '--topics', 'secure-code', '--topics', 'testing'], {
+        encoding: 'utf8',
+        timeout: 10000
+      })
+
+      assert.strictEqual(result.status, 0, 'Should succeed with multiple topics')
+      assert.ok(result.stdout.includes('✅ Agent rules generated successfully!'), 'Should show success message')
+    })
+
+    test('should accept short flags for app and topics', () => {
+      const result = spawnSync('node', ['dist/bin/cli.mjs', '-a', 'claude-code', '-t', 'security-vulnerabilities'], {
+        encoding: 'utf8',
+        timeout: 10000
+      })
+
+      assert.strictEqual(result.status, 0, 'Should succeed with short flags')
+      assert.ok(result.stdout.includes('✅ Agent rules generated successfully!'), 'Should show success message')
+    })
+
+    test('should reject invalid app', () => {
+      const result = spawnSync('node', ['dist/bin/cli.mjs', '--app', 'invalid-app', '--topics', 'testing'], {
+        encoding: 'utf8',
+        timeout: 5000
+      })
+
+      assert.notStrictEqual(result.status, 0, 'Should exit with error')
+      assert.ok(result.stderr.includes('Invalid app "invalid-app"'), 'Should show invalid app error')
+      assert.ok(result.stderr.includes('Available apps:'), 'Should list available apps')
+    })
+
+    test('should reject invalid topic', () => {
+      const result = spawnSync('node', ['dist/bin/cli.mjs', '--app', 'cursor', '--topics', 'invalid-topic'], {
+        encoding: 'utf8',
+        timeout: 5000
+      })
+
+      assert.notStrictEqual(result.status, 0, 'Should exit with error')
+      assert.ok(result.stderr.includes('Invalid topics "invalid-topic"'), 'Should show invalid topic error')
+      assert.ok(result.stderr.includes('Available topics:'), 'Should list available topics')
+    })
+
+    test('should require both app and topics when using CLI flags', () => {
+      const appOnlyResult = spawnSync('node', ['dist/bin/cli.mjs', '--app', 'cursor'], {
+        encoding: 'utf8',
+        timeout: 5000
+      })
+
+      const topicsOnlyResult = spawnSync('node', ['dist/bin/cli.mjs', '--topics', 'testing'], {
+        encoding: 'utf8',
+        timeout: 5000
+      })
+
+      assert.notStrictEqual(appOnlyResult.status, 0, 'Should fail when only app provided')
+      assert.ok(appOnlyResult.stderr.includes('both --app and --topics must be specified'), 'Should show error message')
+
+      assert.notStrictEqual(topicsOnlyResult.status, 0, 'Should fail when only topics provided')
+      assert.ok(topicsOnlyResult.stderr.includes('both --app and --topics must be specified'), 'Should show error message')
+    })
+
+    test('should handle invalid command line arguments gracefully', () => {
+      const result = spawnSync('node', ['dist/bin/cli.mjs', '--invalid-flag'], {
+        encoding: 'utf8',
+        timeout: 5000
+      })
+
+      assert.notStrictEqual(result.status, 0, 'Should exit with error for invalid flags')
+      assert.ok(result.stderr.includes('Error parsing command line arguments'), 'Should show parsing error')
+    })
+
+    test('should validate all supported apps work', () => {
+      const supportedApps = ['github-copilot', 'cursor', 'claude-code']
+
+      for (const app of supportedApps) {
+        const result = spawnSync('node', ['dist/bin/cli.mjs', '--app', app, '--topics', 'testing'], {
+          encoding: 'utf8',
+          timeout: 10000
+        })
+
+        assert.strictEqual(result.status, 0, `Should work with app: ${app}`)
+        assert.ok(result.stdout.includes('✅ Agent rules generated successfully!'), `Should generate rules for ${app}`)
+      }
+    })
+
+    test('should validate all supported topics work', () => {
+      const supportedTopics = ['secure-code', 'security-vulnerabilities', 'testing']
+
+      for (const topic of supportedTopics) {
+        const result = spawnSync('node', ['dist/bin/cli.mjs', '--app', 'cursor', '--topics', topic], {
+          encoding: 'utf8',
+          timeout: 10000
+        })
+
+        assert.strictEqual(result.status, 0, `Should work with topic: ${topic}`)
+        assert.ok(result.stdout.includes('✅ Agent rules generated successfully!'), `Should generate rules for ${topic}`)
+      }
+    })
+  })
 })
