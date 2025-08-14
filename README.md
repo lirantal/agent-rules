@@ -24,9 +24,46 @@
 
 ## Usage
 
+### Interactive Mode
+
 ```bash
 npx agent-rules
 ```
+
+This will start an interactive session where you can select the AI app and topics.
+
+### Command Line Interface
+
+You can also use command line flags to skip the interactive prompts:
+
+```bash
+# Generate rules for a specific AI app and topic
+npx agent-rules --app cursor --topics secure-code
+
+# Generate rules for multiple topics
+npx agent-rules --app github-copilot --topics secure-code --topics testing
+
+# Use short flags
+npx agent-rules -a claude-code -t security-vulnerabilities
+
+# Show help
+npx agent-rules --help
+
+# Show version
+npx agent-rules --version
+```
+
+#### Available Options
+
+**AI Apps:**
+- `github-copilot` - GitHub Copilot
+- `cursor` - Cursor
+- `claude-code` - Claude Code
+
+**Topics:**
+- `secure-code` - Secure coding practices
+- `security-vulnerabilities` - Security vulnerability scanning and fixes
+- `testing` - Testing strategy and guidelines
 
 ## Rules
 

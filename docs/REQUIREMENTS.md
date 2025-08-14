@@ -27,11 +27,30 @@ The project has the following key dependencies:
 **Acceptance Criteria:**
 
 - The CLI must be executable from the command line.
-- The CLI must present an interactive prompt to the user.
-- The CLI must guide the user through the process of selecting an AI app, a programming language, and a topic.
-- The CLI must handle user cancellation gracefully.
+- The CLI must support both interactive and non-interactive modes of operation.
+- In interactive mode, the CLI must present interactive prompts to guide the user through selections.
+- In non-interactive mode, the CLI must accept command-line flags to skip interactive prompts.
+- The CLI must handle user cancellation gracefully in interactive mode.
 - The CLI must display a confirmation message upon successful completion.
 - The CLI must display an error message if the operation fails.
+- The CLI must provide help information when requested via `--help` or `-h` flags.
+- The CLI must display version information when requested via `--version` or `-v` flags.
+
+### Command Line Arguments
+
+**Capability:** The CLI must support command-line arguments for non-interactive operation.
+
+**Acceptance Criteria:**
+
+- The CLI must accept `--app` (or `-a`) flag to specify the AI app.
+- The CLI must accept `--topics` (or `-t`) flag to specify one or more topics (multiple values supported).
+- The CLI must validate that both `--app` and `--topics` are provided when using non-interactive mode.
+- The CLI must validate that the specified app is supported by the adapter registry.
+- The CLI must validate that all specified topics are available in the template system.
+- The CLI must provide clear error messages for invalid arguments with available options listed.
+- The CLI must fall back to interactive mode when no command-line arguments are provided.
+- The CLI must use Node.js built-in `util.parseArgs` for robust argument parsing.
+- The CLI must handle argument parsing errors gracefully with helpful error messages.
 
 ### AI App Selection
 

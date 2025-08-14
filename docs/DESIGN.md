@@ -63,11 +63,14 @@ The project follows a layered architecture with an adapter pattern:
 
 - **Component**: The CLI entry point.
 - **Responsibilities**: 
-  - Parses command-line arguments.
-  - Prompts the user for input using `@clack/prompts`.
+  - Parses command-line arguments using Node.js built-in `util.parseArgs`.
+  - Supports both interactive and non-interactive modes of operation.
+  - In interactive mode, prompts the user for input using `@clack/prompts`.
+  - In non-interactive mode, processes command-line flags (`--app`, `--topics`, `--help`, `--version`).
+  - Validates command-line arguments and provides helpful error messages.
   - Calls the core logic to generate the agentic rules.
   - Handles errors and displays appropriate messages to the user.
-- **Interfaces**: Interacts with the `main.ts` module.
+- **Interfaces**: Interacts with the `main.ts` module and the adapter registry for validation.
 
 ### 2.2. `main.ts`
 
@@ -164,9 +167,63 @@ version: "1.0.0"
 - Implements duplicate detection to avoid redundant imports
 - Uses simple string-based content management for efficient processing
 
-## 3. Data Models
+## 3. CLI Architecture
 
-### 3.1. `ScaffoldInstructions`
+### 3.1. Dual-Mode Operation
+
+The CLI supports two distinct modes of operation:
+
+#### 3.1.1. Interactive Mode (Default)
+- Activated when no command-line flags are provided
+- Uses `@clack/prompts` for user-friendly interactive selection
+- Guides users through AI app and topic selection with descriptions
+- Provides immediate validation and feedback
+- Handles user cancellation gracefully
+
+#### 3.1.2. Non-Interactive Mode
+- Activated when command-line flags are provided
+- Uses Node.js built-in `util.parseArgs` for argument parsing
+- Supports the following flags:
+  - `--app` or `-a`: Specify the AI app (required in non-interactive mode)
+  - `--topics` or `-t`: Specify one or more topics (multiple values supported)
+  - `--help` or `-h`: Display help information and exit
+  - `--version` or `-v`: Display version information and exit
+- Validates arguments against available options from the adapter registry and template system
+- Provides clear error messages with available options listed
+
+### 3.2. Command Line Argument Processing
+
+#### 3.2.1. Argument Parsing
+```typescript
+interface CliArgs {
+  app?: string
+  topics?: string[]
+  help?: boolean
+  version?: boolean
+}
+```
+
+#### 3.2.2. Validation Logic
+- **App Validation**: Checks against `AdapterRegistry.getSupportedAiApps()`
+- **Topic Validation**: Checks against available template directories
+- **Completeness Validation**: Ensures both `--app` and `--topics` are provided when using non-interactive mode
+- **Error Handling**: Provides specific error messages for different validation failures
+
+#### 3.2.3. Help and Version Information
+- **Help**: Displays usage information, available options, and examples
+- **Version**: Reads version from `package.json` using secure path resolution
+
+### 3.3. Mode Selection Logic
+
+The CLI determines the operation mode using the following logic:
+1. Parse command-line arguments using `util.parseArgs`
+2. If `--help` or `--version` flags are present, handle them and exit
+3. If `--app` or `--topics` flags are present, validate and use non-interactive mode
+4. Otherwise, fall back to interactive mode
+
+## 4. Data Models
+
+### 4.1. `ScaffoldInstructions`
 
 - **Description**: Represents the user's selections for generating agentic rules.
 - **Type Definition**:
@@ -179,7 +236,7 @@ interface ScaffoldInstructions {
 }
 ```
 
-### 3.2. `AiAppConfig`
+### 4.2. `AiAppConfig`
 
 - **Description**: Represents the configuration for a supported AI app.
 - **Type Definition**:
@@ -191,7 +248,21 @@ interface AiAppConfig {
 }
 ```
 
-### 3.3. Adapter Pattern
+### 4.3. `CliArgs`
+
+- **Description**: Represents the parsed command-line arguments.
+- **Type Definition**:
+
+```typescript
+interface CliArgs {
+  app?: string;
+  topics?: string[];
+  help?: boolean;
+  version?: boolean;
+}
+```
+
+### 4.4. Adapter Pattern
 
 - **Description**: The adapter pattern implementation allows for extensible AI app support.
 - **Key Classes**:
@@ -210,18 +281,18 @@ abstract class BaseAdapter {
 }
 ```
 
-## 4. Supported AI Apps
+## 5. Supported AI Apps
 
 The project currently supports three AI coding assistants, each with unique characteristics and processing requirements:
 
-### 4.1. GitHub Copilot
+### 5.1. GitHub Copilot
 - **Identifier**: `github-copilot`
 - **Directory**: `.github/instructions`
 - **File Extension**: `.instructions.md`
 - **Processing Strategy**: Direct file copying with secure path validation
 - **Use Case**: Simple instruction files for GitHub Copilot workspace integration
 
-### 4.2. Cursor
+### 5.2. Cursor
 - **Identifier**: `cursor`
 - **Directory**: `.cursor/rules`
 - **File Extension**: `.mdc`
@@ -232,7 +303,7 @@ The project currently supports three AI coding assistants, each with unique char
   - Uses structured YAML processing for accuracy
 - **Use Case**: Rule files for Cursor AI coding assistant with metadata transformation
 
-### 4.3. Claude Code
+### 5.3. Claude Code
 - **Identifier**: `claude-code`
 - **Directory**: `.claude/rules`
 - **File Extension**: `.md`
@@ -244,9 +315,9 @@ The project currently supports three AI coding assistants, each with unique char
   - Uses @ syntax for file imports (e.g., `@./.claude/rules/filename.md`)
 - **Use Case**: Rule files for Claude Code with automatic context file management
 
-## 5. APIs
+## 6. APIs
 
-### 5.1. Core Application API
+### 6.1. Core Application API
 
 #### `scaffoldAiAppInstructions(scaffoldInstructions: ScaffoldInstructions): Promise<void>`
 
@@ -261,7 +332,27 @@ The project currently supports three AI coding assistants, each with unique char
   3. Resolves template and target directories
   4. Delegates processing to the adapter
 
-### 5.2. Adapter Registry API
+### 6.2. CLI API
+
+#### Command Line Interface Functions
+
+##### `parseCommandLineArgs(): CliArgs`
+- **Description**: Parses command-line arguments using Node.js `util.parseArgs`
+- **Returns**: Parsed CLI arguments object
+- **Throws**: Error for invalid arguments with helpful error messages
+
+##### `validateCliArgs(args: CliArgs): void`
+- **Description**: Validates parsed CLI arguments against available options
+- **Parameters**: `args` - Parsed CLI arguments
+- **Throws**: Error for invalid app, topics, or missing required arguments
+
+##### `showHelp(): void`
+- **Description**: Displays comprehensive help information including usage, options, and examples
+
+##### `showVersion(): Promise<void>`
+- **Description**: Displays version information read from package.json
+
+### 6.3. Adapter Registry API
 
 #### `AdapterRegistry.getAdapter(aiApp: string): BaseAdapter`
 
@@ -276,7 +367,7 @@ The project currently supports three AI coding assistants, each with unique char
 - **Description**: Returns a list of all supported AI app identifiers.
 - **Returns**: Array of supported AI app strings
 
-### 5.3. Adapter Interface
+### 6.4. Adapter Interface
 
 #### `BaseAdapter.processInstructions(scaffoldInstructions, resolvedTemplateDirectory, resolvedTargetDirectory): Promise<void>`
 
@@ -287,16 +378,20 @@ The project currently supports three AI coding assistants, each with unique char
   - `resolvedTargetDirectory`: Path to the target destination
 - **Returns**: Promise that resolves when processing is complete
 
-## 6. Error Handling
+## 7. Error Handling
+
+## 7. Error Handling
 
 - **User Cancellation**: The CLI should handle user cancellation gracefully by exiting the process without an error.
 - **Invalid Input**: The CLI should validate user input and display an error message if the input is invalid.
+- **Command Line Arguments**: The CLI should validate command-line arguments and provide helpful error messages with available options listed.
 - **File System Errors**: The application should handle file system errors, such as permission errors or missing files, by displaying an error message to the user.
 - **Template Not Found**: The application should throw an error if the template directory cannot be found.
+- **Argument Parsing Errors**: The CLI should handle `util.parseArgs` errors gracefully and display help information.
 
-## 7. Testing Strategy
+## 8. Testing Strategy
 
-### 7.1. Unit Tests
+### 8.1. Unit Tests
 - **Adapter Tests**: Each adapter class should have comprehensive unit tests covering:
   - Configuration validation
   - Template processing logic
@@ -306,28 +401,37 @@ The project currently supports three AI coding assistants, each with unique char
   - Correct adapter instantiation
   - Error handling for unsupported AI apps
   - Listing supported AI apps
+- **CLI Argument Tests**: The CLI argument parsing should be tested for:
+  - Valid argument combinations
+  - Invalid argument handling
+  - Help and version flag functionality
+  - Error message accuracy
 
-### 7.2. Integration Tests
+### 8.2. Integration Tests
 - **Core Logic Integration**: Test the interaction between `main.ts` and the adapter layer
 - **Template Resolution**: Test template directory resolution and validation
 - **End-to-End Workflows**: Test complete scaffolding workflows for each supported AI app
+- **CLI Integration**: Test both interactive and non-interactive CLI modes
 
-### 7.3. End-to-End Tests
+### 8.3. End-to-End Tests
 - **CLI Integration**: Test the entire application from command line invocation
 - **File System Operations**: Verify correct file creation and directory structure
 - **Error Scenarios**: Test error handling for various failure modes
+- **Command Line Scenarios**: Test all CLI flag combinations and error cases
 
-## 8. Implementation Considerations
+## 9. Implementation Considerations
 
-### 8.1. Extensibility
+### 9.1. Extensibility
 - **Adapter Pattern**: The project uses the adapter pattern to make adding new AI apps straightforward
+- **CLI Architecture**: The dual-mode CLI design allows for both automation and user-friendly interaction
 - **New AI App Support**: To add a new AI app:
   1. Create a new adapter class extending `BaseAdapter`
   2. Implement the `processInstructions` method with AI app-specific logic
   3. Register the adapter in `AdapterRegistry`
   4. Add corresponding tests
+  5. Update CLI validation lists automatically (adapters are discovered via registry)
 
-### 8.2. Maintainability
+### 9.2. Maintainability
 - **Clear Separation of Concerns**: Each adapter handles only its specific AI app logic
 - **Frontmatter Processing Pipeline**: The frontmatter processing system is designed with clear separation:
   - AST parsing for reliable markdown structure handling
@@ -343,7 +447,7 @@ The project currently supports three AI coding assistants, each with unique char
 - **Type Safety**: Full TypeScript typing ensures compile-time error detection
 - **Documentation**: Code is well-documented with clear responsibilities
 
-### 8.3. Performance
+### 9.3. Performance
 - **Lazy Loading**: Adapters are instantiated only when needed
 - **Efficient File Operations**: Minimized file system calls
 - **AST Caching**: Markdown AST parsing is performed only when transformations are needed
@@ -352,8 +456,9 @@ The project currently supports three AI coding assistants, each with unique char
 - **Duplicate Detection**: Smart import checking prevents unnecessary file operations
 - **Memory Management**: Large files are processed streaming-style to minimize memory usage
 - **Error Recovery**: Graceful handling of file operation failures
+- **CLI Argument Parsing**: Uses efficient built-in Node.js `util.parseArgs` for fast argument processing
 
-### 8.4. Development Guidelines
+### 9.4. Development Guidelines
 
 #### Adding a New Adapter
 1. **Create Adapter Class**: Extend `BaseAdapter` in `src/adapters/`
