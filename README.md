@@ -5,7 +5,7 @@
 </h1>
 
 <p align="center">
-  Rules and instructions for agentic coding tools like Cursor, GitHub Copilot, Claude CLI, Gemini CLI, Qodo, Cline and more
+  Rules and instructions for agentic coding tools like Cursor, GitHub Copilot, Claude CLI and Gemini CLI.
 </p>
 
 <p align="center">
@@ -31,6 +31,15 @@ npx agent-rules
 ```
 
 This will start an interactive session where you can select the AI app and topics.
+
+#### Supported AI Apps
+
+| AI App | Supported |
+|--------|-----------|
+| GitHub Copilot | ✅ |
+| Cursor | ✅ |
+| Claude CLI | ✅ |
+| Gemini CLI | ✅ |
 
 ### Command Line Interface
 
@@ -59,6 +68,7 @@ npx agent-rules --version
 - `github-copilot` - GitHub Copilot
 - `cursor` - Cursor
 - `claude-code` - Claude Code
+- `gemini` - Gemini CLI
 
 **Topics:**
 - `secure-code` - Secure coding practices
