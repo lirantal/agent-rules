@@ -28,7 +28,7 @@ jobs:
         if: github.actor != 'dependabot[bot]'
         with:
           fail_ci_if_error: true
-          verbose: false
+          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
         env:
           CI: true
