@@ -1,5 +1,11 @@
 # agent-rules
 
+## 1.2.0
+
+### Minor Changes
+
+- 676f929: feat: add support for Gemini, Claude Code, and Cursor rules
+
 ## 1.1.2
 
 ### Patch Changes
