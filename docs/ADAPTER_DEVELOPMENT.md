@@ -332,17 +332,89 @@ private transformFrontmatterFields(frontmatterValue: string): string {
 4. **Platform Compatibility**: Use `path` module methods instead of string concatenation
 5. **Frontmatter Processing Errors**: Always provide fallback mechanisms for YAML parsing failures
 6. **AST Manipulation**: Be careful when modifying markdown AST nodes to maintain document structure
+7. **🚨 CRITICAL: Manual Testing in Project Directory**: **NEVER** run manual CLI tests from the project root directory
+
+## ⚠️ CRITICAL WARNING: Manual Testing
+
+**NEVER manually test your adapter by running the CLI from the project root directory!**
+
+### ❌ WRONG - Do NOT do this:
+```bash
+# Being in the project directory
+cd /path/to/agent-rules
+npm run build
+node dist/bin/cli.mjs --app your-adapter --topics testing  # ❌ This pollutes the project!
+```
+
+This will create scaffold files in the actual project directory (`.your-adapter/`, `YOUR_ADAPTER.md`, etc.), polluting the workspace.
+
+### ✅ CORRECT - Always use temporary directories:
+```bash
+# Manual testing should ALWAYS be in temporary directories
+cd /tmp
+mkdir test-your-adapter
+cd test-your-adapter
+node /path/to/agent-rules/dist/bin/cli.mjs --app your-adapter --topics testing
+# Verify output, then clean up
+cd /tmp && rm -rf test-your-adapter
+```
+
+### Why This Matters:
+- **Project Pollution**: Scaffolding in the project directory creates unwanted files
+- **Git Contamination**: These files might accidentally get committed
+- **Misleading State**: The project should remain clean for other developers
+- **Integration Tests Exist**: Manual testing should be minimal - rely on comprehensive integration tests
+
+### Proper Testing Workflow:
+1. **Write Integration Tests First**: Add comprehensive integration tests in `__tests__/integration.test.ts`
+2. **Run Automated Tests**: Use `npm test` to verify functionality
+3. **Manual Testing (if needed)**: Only in `/tmp` or other temporary directories
+4. **Never Test in Project Root**: The project directory should remain clean
+
+### ⚠️ CLI Testing Requirements
+
+**All CLI tests that execute the actual CLI command MUST use temporary directories as working directories!**
+
+#### ❌ WRONG - CLI tests without proper working directory:
+```typescript
+test('should work with valid app', () => {
+  const result = spawnSync('node', ['dist/bin/cli.mjs', '--app', 'gemini', '--topics', 'testing'], {
+    encoding: 'utf8',
+    timeout: 10000
+    // ❌ Missing cwd - runs in project directory!
+  })
+})
+```
+
+#### ✅ CORRECT - CLI tests with temporary working directory:
+```typescript
+test('should work with valid app', () => {
+  const cliPath = path.resolve(originalCwd, 'dist/bin/cli.mjs')
+  const result = spawnSync('node', [cliPath, '--app', 'gemini', '--topics', 'testing'], {
+    encoding: 'utf8',
+    timeout: 10000,
+    cwd: tempDir  // ✅ Runs in temporary directory
+  })
+})
+```
+
+**Key Requirements for CLI Tests:**
+- Always use `cwd: tempDir` option in `spawnSync` calls
+- Use absolute paths to the CLI: `path.resolve(originalCwd, 'dist/bin/cli.mjs')`
+- Set up `tempDir` in `beforeEach` and clean up in `afterEach`
 
 ## Testing Your Adapter
 
+**⚠️ IMPORTANT: All testing must be done through automated tests or in temporary directories - NEVER in the project root!**
+
 Before submitting your adapter:
 
-1. Run the full test suite: `npm test`
-2. Run linting: `npm run lint`
-3. Test with real templates and verify output
-4. Test error scenarios (missing files, permissions, etc.)
-5. Test frontmatter processing with various YAML formats and edge cases
-6. **Add end-to-end integration tests** (Required for all new adapters)
+1. **Run the full test suite**: `npm test`
+2. **Run linting**: `npm run lint`
+3. **Manual testing (if absolutely necessary)**: Only in `/tmp` or other temporary directories
+4. **Test error scenarios**: Through automated tests (missing files, permissions, etc.)
+5. **Test frontmatter processing**: Through automated tests with various YAML formats and edge cases
+6. **Add end-to-end integration tests**: Required for all new adapters
 
 ### End-to-End Integration Testing Requirements
 

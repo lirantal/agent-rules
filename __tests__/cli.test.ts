@@ -165,9 +165,11 @@ describe('CLI Application', () => {
     })
 
     test('should accept valid app and topics combination', () => {
-      const result = spawnSync('node', ['dist/bin/cli.mjs', '--app', 'cursor', '--topics', 'testing'], {
+      const cliPath = path.resolve(originalCwd, 'dist/bin/cli.mjs')
+      const result = spawnSync('node', [cliPath, '--app', 'cursor', '--topics', 'testing'], {
         encoding: 'utf8',
-        timeout: 10000
+        timeout: 10000,
+        cwd: tempDir
       })
 
       assert.strictEqual(result.status, 0, 'Should succeed with valid arguments')
@@ -175,9 +177,11 @@ describe('CLI Application', () => {
     })
 
     test('should accept multiple topics', () => {
-      const result = spawnSync('node', ['dist/bin/cli.mjs', '--app', 'github-copilot', '--topics', 'secure-code', '--topics', 'testing'], {
+      const cliPath = path.resolve(originalCwd, 'dist/bin/cli.mjs')
+      const result = spawnSync('node', [cliPath, '--app', 'github-copilot', '--topics', 'secure-code', '--topics', 'testing'], {
         encoding: 'utf8',
-        timeout: 10000
+        timeout: 10000,
+        cwd: tempDir
       })
 
       assert.strictEqual(result.status, 0, 'Should succeed with multiple topics')
@@ -185,9 +189,11 @@ describe('CLI Application', () => {
     })
 
     test('should accept short flags for app and topics', () => {
-      const result = spawnSync('node', ['dist/bin/cli.mjs', '-a', 'claude-code', '-t', 'security-vulnerabilities'], {
+      const cliPath = path.resolve(originalCwd, 'dist/bin/cli.mjs')
+      const result = spawnSync('node', [cliPath, '-a', 'claude-code', '-t', 'security-vulnerabilities'], {
         encoding: 'utf8',
-        timeout: 10000
+        timeout: 10000,
+        cwd: tempDir
       })
 
       assert.strictEqual(result.status, 0, 'Should succeed with short flags')
@@ -245,12 +251,14 @@ describe('CLI Application', () => {
     })
 
     test('should validate all supported apps work', () => {
-      const supportedApps = ['github-copilot', 'cursor', 'claude-code']
+      const supportedApps = ['github-copilot', 'cursor', 'claude-code', 'gemini']
+      const cliPath = path.resolve(originalCwd, 'dist/bin/cli.mjs')
 
       for (const app of supportedApps) {
-        const result = spawnSync('node', ['dist/bin/cli.mjs', '--app', app, '--topics', 'testing'], {
+        const result = spawnSync('node', [cliPath, '--app', app, '--topics', 'testing'], {
           encoding: 'utf8',
-          timeout: 10000
+          timeout: 10000,
+          cwd: tempDir
         })
 
         assert.strictEqual(result.status, 0, `Should work with app: ${app}`)
@@ -260,11 +268,13 @@ describe('CLI Application', () => {
 
     test('should validate all supported topics work', () => {
       const supportedTopics = ['secure-code', 'security-vulnerabilities', 'testing']
+      const cliPath = path.resolve(originalCwd, 'dist/bin/cli.mjs')
 
       for (const topic of supportedTopics) {
-        const result = spawnSync('node', ['dist/bin/cli.mjs', '--app', 'cursor', '--topics', topic], {
+        const result = spawnSync('node', [cliPath, '--app', 'cursor', '--topics', topic], {
           encoding: 'utf8',
-          timeout: 10000
+          timeout: 10000,
+          cwd: tempDir
         })
 
         assert.strictEqual(result.status, 0, `Should work with topic: ${topic}`)

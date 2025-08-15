@@ -107,6 +107,48 @@ describe('Integration Tests', () => {
       assert.strictEqual(copiedFileSystemContent, originalFileSystemContent)
     })
 
+    test('should successfully scaffold Gemini testing instructions', async () => {
+      // Arrange
+      process.chdir(tempDir)
+      const scaffoldInstructions = {
+        aiApp: 'gemini',
+        codeLanguage: 'nodejs',
+        codeTopic: 'testing'
+      }
+
+      // Act
+      await scaffoldAiAppInstructions(scaffoldInstructions)
+
+      // Assert - Verify directory structure
+      const geminiRulesDir = path.join(tempDir, '.gemini', 'rules')
+      const geminiMainFile = path.join(tempDir, 'GEMINI.md')
+
+      const rulesDirStat = await fs.stat(geminiRulesDir)
+      const mainFileStat = await fs.stat(geminiMainFile)
+      assert.ok(rulesDirStat.isDirectory())
+      assert.ok(mainFileStat.isFile())
+
+      // Verify files were copied
+      const copiedFiles = await fs.readdir(geminiRulesDir)
+      assert.ok(copiedFiles.includes('testing.md'))
+
+      // Verify GEMINI.md contains correct imports (using @ syntax, not bullet points)
+      const geminiContent = await fs.readFile(geminiMainFile, 'utf-8')
+      assert.ok(geminiContent.includes('# Testing'))
+      assert.ok(geminiContent.includes('@./.gemini/rules/testing.md'))
+      assert.ok(!geminiContent.includes('- @'), 'Should not use bullet points for imports')
+
+      // Verify frontmatter was stripped from copied file
+      const originalTestingPath = path.join(originalCwd, '__template__/nodejs/testing/testing.md')
+      const originalContent = await fs.readFile(originalTestingPath, 'utf-8')
+      const copiedContent = await fs.readFile(path.join(geminiRulesDir, 'testing.md'), 'utf-8')
+
+      // Original should have frontmatter, copied should not
+      assert.ok(originalContent.startsWith('---'), 'Original should have frontmatter')
+      assert.ok(!copiedContent.startsWith('---'), 'Copied file should not have frontmatter')
+      assert.ok(copiedContent.includes('# Testing Guidelines for Node.js applications'), 'Content should be preserved')
+    })
+
     test('should append to existing CLAUDE.md without duplicates', async () => {
       // Arrange
       process.chdir(tempDir)

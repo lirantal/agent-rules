@@ -2,6 +2,7 @@ import { BaseAdapter } from './base-adapter.js'
 import { GitHubCopilotAdapter } from './github-copilot-adapter.js'
 import { CursorAdapter } from './cursor-adapter.js'
 import { ClaudeCodeAdapter } from './claude-code-adapter.js'
+import { GeminiAdapter } from './gemini-adapter.js'
 
 /**
  * Registry of AI app adapters
@@ -10,7 +11,8 @@ export class AdapterRegistry {
   private static readonly adapters = new Map<string, () => BaseAdapter>([
     ['github-copilot', () => new GitHubCopilotAdapter()],
     ['cursor', () => new CursorAdapter()],
-    ['claude-code', () => new ClaudeCodeAdapter()]
+    ['claude-code', () => new ClaudeCodeAdapter()],
+    ['gemini', () => new GeminiAdapter()]
   ])
 
   /**

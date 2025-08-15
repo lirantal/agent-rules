@@ -50,6 +50,15 @@ describe('Agent Rules CLI', () => {
       })
     })
 
+    test('should return correct config for gemini', () => {
+      const result = getAiAppDirectory('gemini')
+
+      assert.deepStrictEqual(result, {
+        directory: '.gemini/rules',
+        filesSuffix: '.md'
+      })
+    })
+
     test('should throw error for unsupported AI app', () => {
       assert.throws(
         () => getAiAppDirectory('unsupported-app'),
