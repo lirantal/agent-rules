@@ -169,7 +169,7 @@ Follow these guidelines.`
     assert.strictEqual(geminiContent.includes('# Testing'), true, 'Should have Testing category header')
     assert.strictEqual(geminiContent.includes('@./.gemini/rules/test1.md'), true, 'Should have import for test1.md')
     assert.strictEqual(geminiContent.includes('@./.gemini/rules/test2.md'), true, 'Should have import for test2.md')
-    
+
     // Verify using @ syntax (not bullet points like Claude)
     assert.strictEqual(geminiContent.includes('- @'), false, 'Should not use bullet points for imports')
   })
@@ -351,7 +351,7 @@ This is existing content in GEMINI.md.
     // Create a template file with restricted permissions (if possible on this system)
     const restrictedFile = path.join(testTemplateDir, 'restricted.md')
     await fs.writeFile(restrictedFile, '# Restricted', 'utf-8')
-    
+
     // Try to make it unreadable (this might not work on all systems)
     try {
       await fs.chmod(restrictedFile, 0o000)

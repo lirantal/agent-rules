@@ -112,12 +112,12 @@ export class GeminiAdapter extends BaseAdapter {
     // Check if content starts with frontmatter (---)
     const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/
     const match = content.match(frontmatterRegex)
-    
+
     if (match) {
       // Return content without frontmatter
       return match[2]
     }
-    
+
     // Return original content if no frontmatter found
     return content
   }
