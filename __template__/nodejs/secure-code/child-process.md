@@ -1,5 +1,6 @@
 ---
 applyTo: "**/*.js,**/*.ts"
+description: System processes secure coding guidelines
 source: https://github.com/lirantal/agent-rules
 ---
 

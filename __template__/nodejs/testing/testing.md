@@ -1,5 +1,6 @@
 ---
 applyTo: "**/*.test.js,**/*.test.ts,**/*.spec.js,**/*.spec.ts,__tests__/**/*.js,__tests__/**/*.ts,test/**/*.js,test/**/*.ts"
+description: Testing guidelines for Node.js applications
 source: https://github.com/lirantal/agent-rules
 ---
 
