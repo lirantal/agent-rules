@@ -113,7 +113,7 @@ export class GeminiAdapter extends BaseAdapter {
     const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/
     const match = content.match(frontmatterRegex)
 
-    if (match) {
+    if (match && match[2] !== undefined) {
       // Return content without frontmatter
       return match[2]
     }
