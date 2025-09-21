@@ -62,6 +62,25 @@ export async function resolveTemplateDirectory (scaffoldInstructions: ScaffoldIn
   return resolvedTemplateDirectory
 }
 
+export async function resolveMcpTemplateDirectory (scaffoldInstructions: ScaffoldInstructions): Promise<string> {
+  const { codeLanguage } = scaffoldInstructions
+
+  const currentFileDirectory = resolvePackageRootDirectoryForTemplates()
+  const mcpTemplateDirectory = path.join(currentFileDirectory, templateRoot, codeLanguage, '_mcp')
+  const resolvedMcpTemplateDirectory = path.resolve(mcpTemplateDirectory)
+
+  try {
+    const templateStats = await fs.stat(resolvedMcpTemplateDirectory)
+    if (!templateStats.isDirectory()) {
+      throw new Error(`MCP template directory is not a directory: ${resolvedMcpTemplateDirectory}`)
+    }
+  } catch (error) {
+    throw new Error(`MCP template directory not found: ${resolvedMcpTemplateDirectory}`)
+  }
+
+  return resolvedMcpTemplateDirectory
+}
+
 async function createTargetDirectory (directory: string): Promise<string> {
   const resolvedTargetDirectory = path.resolve(directory)
   await fs.mkdir(resolvedTargetDirectory, { recursive: true })
@@ -69,7 +88,7 @@ async function createTargetDirectory (directory: string): Promise<string> {
 }
 
 export async function scaffoldAiAppInstructions (scaffoldInstructions: ScaffoldInstructions): Promise<void> {
-  const { aiApp, codeLanguage, codeTopic } = scaffoldInstructions
+  const { aiApp, codeLanguage, codeTopic, includeMcp } = scaffoldInstructions
   if (!aiApp || !codeLanguage || !codeTopic) {
     throw new Error('Scaffold instructions must include aiApp and all other template choices.')
   }
@@ -86,4 +105,16 @@ export async function scaffoldAiAppInstructions (scaffoldInstructions: ScaffoldI
 
   // Use the adapter to process the instructions
   await adapter.processInstructions(scaffoldInstructions, resolvedTemplateDirectory, resolvedTargetDirectory)
+
+  // Process MCP configuration if requested and supported
+  if (includeMcp) {
+    const mcpConfig = adapter.getMcpConfig()
+    if (mcpConfig) {
+      debug(`Processing MCP configuration for ${aiApp}`)
+      const resolvedMcpTemplateDirectory = await resolveMcpTemplateDirectory(scaffoldInstructions)
+      await adapter.processMcpConfiguration(scaffoldInstructions, resolvedMcpTemplateDirectory, resolvedTargetDirectory)
+    } else {
+      console.warn(`MCP configuration not supported for ${aiApp}`)
+    }
+  }
 }
