@@ -1,5 +1,11 @@
 # agent-rules
 
+## 1.3.0
+
+### Minor Changes
+
+- 77c9f13: feat: scaffold mcp server
+
 ## 1.2.0
 
 ### Minor Changes
