@@ -6,7 +6,7 @@ import { toMarkdown } from 'mdast-util-to-markdown'
 import { frontmatter } from 'micromark-extension-frontmatter'
 import { frontmatterFromMarkdown, frontmatterToMarkdown } from 'mdast-util-frontmatter'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { BaseAdapter, type AiAppConfig, type ScaffoldInstructions } from './base-adapter.js'
+import { BaseAdapter, type AiAppConfig, type ScaffoldInstructions, type McpConfig } from './base-adapter.js'
 
 const debug = debuglog('agent-rules')
 
@@ -20,6 +20,14 @@ export class CursorAdapter extends BaseAdapter {
       filesSuffix: '.mdc'
     }
     super(config)
+  }
+
+  /**
+   * Get MCP configuration for Cursor (not supported yet)
+   */
+  getMcpConfig (): McpConfig | null {
+    // TODO: Add MCP support for Cursor when available
+    return null
   }
 
   /**

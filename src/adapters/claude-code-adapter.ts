@@ -2,7 +2,7 @@ import path from 'node:path'
 import fs from 'node:fs/promises'
 import { debuglog } from 'node:util'
 import { fromMarkdown } from 'mdast-util-from-markdown'
-import { BaseAdapter, type AiAppConfig, type ScaffoldInstructions } from './base-adapter.js'
+import { BaseAdapter, type AiAppConfig, type ScaffoldInstructions, type McpConfig } from './base-adapter.js'
 
 const debug = debuglog('agent-rules')
 
@@ -25,6 +25,14 @@ export class ClaudeCodeAdapter extends BaseAdapter {
       filesSuffix: '.md'
     }
     super(config)
+  }
+
+  /**
+   * Get MCP configuration for Claude Code (not supported yet)
+   */
+  getMcpConfig (): McpConfig | null {
+    // TODO: Add MCP support for Claude Code when available
+    return null
   }
 
   /**
