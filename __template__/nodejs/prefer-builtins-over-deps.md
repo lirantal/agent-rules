@@ -53,8 +53,39 @@ Use modern **Node.js core APIs** instead of third-party packages when equivalent
 ### TypeScript (execution)
 - **Run TS directly:** `node --experimental-strip-types app.ts` for basic transpile. Keep `tsc/ts-node` for type-checking, declarations, builds.
 
+### Cancellation
+Operation cancellation: Use `AbortController` and pass its `signal` to APIs that support it (e.g., `fetch`, some stream/file/db clients). Keep cancel libs only when an API does not accept a signal.
+
+```js
+// Cancel long-running operations cleanly
+const controller = new AbortController();
+
+// Auto-cancel after 10s (or cancel on user action)
+setTimeout(() => controller.abort(), 10_000);
+
+try {
+  const res = await fetch('https://slow-api.com/data', { signal: controller.signal });
+  const data = await res.json();
+  console.log('Data received:', data);
+} catch (error) {
+  if ((error as Error).name === 'AbortError') {
+    console.log('Request was cancelled — expected behavior');
+  } else {
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+Notes:
+- Reuse the same controller to cancel multiple related ops together.
+- Prefer timeouts via `AbortController` rather than ad-hoc timers that ignore the underlying task.
+- Treat cancellation as a first-class outcome (log at info level, don’t convert to generic errors).
+
 ---
 
 ## Antipatterns to Avoid
 - **Adding a package that duplicates a built-in** available in your supported Node version. (E.g., adding `uuid` on Node ≥14.17, or `rimraf` on Node ≥14.)
 - **Keeping old deps “just in case”** after migrating — this bloats attack surface and maintenance. Clean up in the same PR.
+- Manual boolean flags / “isCancelled” checks instead of `AbortController` — brittle and easy to forget in nested calls.
+- Swallowing `AbortError` as a failure — cancellation is expected; don’t treat it as an application error.
+- Starting uncancellable work (e.g., streams/DB ops) without threading a `signal` when the API supports one.
