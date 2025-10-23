@@ -1,6 +1,6 @@
 ---
 applyTo: '**'
-description: File System Operations APIs in Node.js
+description: Modern Node.js APIs Preference over Third-Party Dependency Bloat
 source: https://nodesource.com/blog/nodejs-features-replacing-npm-packages
 ---
 
