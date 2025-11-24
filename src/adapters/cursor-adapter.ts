@@ -31,6 +31,13 @@ export class CursorAdapter extends BaseAdapter {
   }
 
   /**
+   * Get commands configuration for Cursor (not supported yet)
+   */
+  getCommandsConfig (): null {
+    return null
+  }
+
+  /**
    * Process instructions by copying template files to the target directory
    */
   async processInstructions (

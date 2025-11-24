@@ -81,6 +81,25 @@ export async function resolveMcpTemplateDirectory (scaffoldInstructions: Scaffol
   return resolvedMcpTemplateDirectory
 }
 
+export async function resolveCommandsTemplateDirectory (scaffoldInstructions: ScaffoldInstructions): Promise<string | null> {
+  const { codeLanguage } = scaffoldInstructions
+
+  const currentFileDirectory = resolvePackageRootDirectoryForTemplates()
+  const commandsTemplateDirectory = path.join(currentFileDirectory, templateRoot, codeLanguage, '_commands')
+  const resolvedCommandsTemplateDirectory = path.resolve(commandsTemplateDirectory)
+
+  try {
+    const templateStats = await fs.stat(resolvedCommandsTemplateDirectory)
+    if (!templateStats.isDirectory()) {
+      return null
+    }
+    return resolvedCommandsTemplateDirectory
+  } catch (error) {
+    // Silently return null if directory doesn't exist
+    return null
+  }
+}
+
 async function createTargetDirectory (directory: string): Promise<string> {
   const resolvedTargetDirectory = path.resolve(directory)
   await fs.mkdir(resolvedTargetDirectory, { recursive: true })
@@ -115,6 +134,18 @@ export async function scaffoldAiAppInstructions (scaffoldInstructions: ScaffoldI
       await adapter.processMcpConfiguration(scaffoldInstructions, resolvedMcpTemplateDirectory, resolvedTargetDirectory)
     } else {
       console.warn(`MCP configuration not supported for ${aiApp}`)
+    }
+  }
+
+  // Process commands configuration if requested and supported
+  if (scaffoldInstructions.includeCommands) {
+    const commandsConfig = adapter.getCommandsConfig()
+    if (commandsConfig) {
+      debug(`Processing commands configuration for ${aiApp}`)
+      const resolvedCommandsTemplateDirectory = await resolveCommandsTemplateDirectory(scaffoldInstructions)
+      if (resolvedCommandsTemplateDirectory) {
+        await adapter.processCommandsConfiguration(scaffoldInstructions, resolvedCommandsTemplateDirectory, resolvedTargetDirectory)
+      }
     }
   }
 }

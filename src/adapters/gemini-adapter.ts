@@ -38,6 +38,13 @@ export class GeminiAdapter extends BaseAdapter {
   }
 
   /**
+   * Get commands configuration for Gemini (not supported yet)
+   */
+  getCommandsConfig (): null {
+    return null
+  }
+
+  /**
    * Process instructions by copying template files and updating GEMINI.md with imports
    */
   async processInstructions (

@@ -18,6 +18,7 @@ interface CliArgs {
   app?: string
   topics?: string[]
   mcp?: boolean
+  commands?: boolean
   help?: boolean
   version?: boolean
 }
@@ -40,6 +41,10 @@ function parseCommandLineArgs (): CliArgs {
           type: 'boolean',
           short: 'm'
         },
+        commands: {
+          type: 'boolean',
+          short: 'c'
+        },
         help: {
           type: 'boolean',
           short: 'h'
@@ -56,6 +61,7 @@ function parseCommandLineArgs (): CliArgs {
       app: values.app,
       topics: values.topics,
       mcp: values.mcp,
+      commands: values.commands,
       help: values.help,
       version: values.version
     }
@@ -76,6 +82,7 @@ Options:
   -t, --topics <topics>   Topics to generate rules for (${AVAILABLE_TOPICS.join(', ')})
                           Can be specified multiple times: --topics secure-code --topics testing
   -m, --mcp               Include MCP (Model Context Protocol) server configuration
+  -c, --commands          Include custom commands
   -h, --help              Show this help message
   -v, --version           Show version number
 
@@ -84,6 +91,7 @@ Examples:
   agent-rules --app cursor --topics secure-code  # Generate secure coding rules for Cursor
   agent-rules -a github-copilot -t testing -t secure-code # Multiple topics
   agent-rules --app gemini --topics testing --mcp # Include MCP configuration
+  agent-rules --app github-copilot --topics secure-code --commands # Include commands
 
 Available AI Apps: ${AVAILABLE_APPS.join(', ')}
 Available Topics: ${AVAILABLE_TOPICS.join(', ')}
@@ -186,12 +194,29 @@ async function initInteractive () {
 
   debug('Include MCP configuration:', includeMcp)
 
+  const includeCommands = await select({
+    message: 'Include custom commands?',
+    options: [
+      { value: true, label: 'Yes', hint: 'Add custom commands for this AI app' },
+      { value: false, label: 'No', hint: 'Skip commands configuration' }
+    ],
+    initialValue: false
+  })
+
+  // Handle cancellation
+  if (typeof includeCommands === 'symbol') {
+    throw new Error('Operation cancelled by user')
+  }
+
+  debug('Include commands configuration:', includeCommands)
+
   for (const codeTopic of topicChoices) {
     const templateChoices = {
       aiApp: aiApp as string,
       codeLanguage,
       codeTopic: codeTopic as string,
-      includeMcp: includeMcp as boolean
+      includeMcp: includeMcp as boolean,
+      includeCommands: includeCommands as boolean
     }
 
     await scaffoldAiAppInstructions(templateChoices)
@@ -207,13 +232,15 @@ async function initWithCliArgs (args: CliArgs) {
   debug('CLI mode - Selected AI App:', args.app)
   debug('CLI mode - Selected code topics:', args.topics?.join(', '))
   debug('CLI mode - Include MCP configuration:', args.mcp)
+  debug('CLI mode - Include commands configuration:', args.commands)
 
   for (const codeTopic of args.topics!) {
     const templateChoices = {
       aiApp: args.app!,
       codeLanguage,
       codeTopic,
-      includeMcp: args.mcp || false
+      includeMcp: args.mcp || false,
+      includeCommands: args.commands || false
     }
 
     await scaffoldAiAppInstructions(templateChoices)

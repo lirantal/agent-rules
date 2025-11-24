@@ -36,6 +36,13 @@ export class ClaudeCodeAdapter extends BaseAdapter {
   }
 
   /**
+   * Get commands configuration for Claude Code (not supported yet)
+   */
+  getCommandsConfig (): null {
+    return null
+  }
+
+  /**
    * Process instructions by copying template files and updating CLAUDE.md with imports
    */
   async processInstructions (

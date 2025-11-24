@@ -12,6 +12,7 @@ export interface ScaffoldInstructions {
   codeLanguage: string
   codeTopic: string
   includeMcp?: boolean
+  includeCommands?: boolean
 }
 
 /**
@@ -30,6 +31,16 @@ export interface McpConfig {
   filePath: string
   /** JSON key name for merging MCP servers (defaults to 'mcpServers') */
   mergeKey?: string
+}
+
+/**
+ * Configuration for command/prompt scaffolding for an AI app
+ */
+export interface CommandsConfig {
+  /** Target directory for command files (relative to project root) */
+  targetDirectory: string
+  /** Function to transform command filename to target filename */
+  fileNameTransform?: (filename: string) => string
 }
 
 /**
@@ -66,6 +77,12 @@ export abstract class BaseAdapter {
    * Returns null if MCP is not supported by this adapter
    */
   abstract getMcpConfig (): McpConfig | null
+
+  /**
+   * Get commands configuration for this AI app
+   * Returns null if commands are not supported by this adapter
+   */
+  abstract getCommandsConfig (): CommandsConfig | null
 
   /**
    * Process MCP configuration (optional override)
@@ -147,6 +164,63 @@ export abstract class BaseAdapter {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.warn(`Warning: Failed to process MCP configuration: ${errorMessage}`)
+    }
+  }
+
+  /**
+   * Process commands configuration (optional override)
+   * Default implementation handles copying command files with optional filename transformation
+   * @param scaffoldInstructions - The instructions containing template choices
+   * @param resolvedCommandsTemplateDirectory - The resolved path to the commands template directory
+   * @param resolvedTargetDirectory - The resolved path to the target directory (project root)
+   */
+  async processCommandsConfiguration (
+    scaffoldInstructions: ScaffoldInstructions,
+    resolvedCommandsTemplateDirectory: string,
+    resolvedTargetDirectory: string
+  ): Promise<void> {
+    const commandsConfig = this.getCommandsConfig()
+    if (!commandsConfig) return
+
+    const targetDirectory = path.resolve(process.cwd(), commandsConfig.targetDirectory)
+
+    debug(`Processing commands from ${resolvedCommandsTemplateDirectory} to ${targetDirectory}`)
+
+    try {
+      // Ensure target directory exists
+      await fs.mkdir(targetDirectory, { recursive: true })
+
+      // Read all files from commands template directory
+      const files = await fs.readdir(resolvedCommandsTemplateDirectory)
+
+      // Filter for *.command.md files
+      const commandFiles = files.filter(file => file.endsWith('.command.md'))
+
+      for (const commandFile of commandFiles) {
+        const sourceFilePath = path.join(resolvedCommandsTemplateDirectory, commandFile)
+        const stat = await fs.stat(sourceFilePath)
+
+        // Only process files, not directories
+        if (stat.isFile()) {
+          // Apply filename transformation if provided
+          const targetFileName = commandsConfig.fileNameTransform
+            ? commandsConfig.fileNameTransform(commandFile)
+            : commandFile
+
+          const targetFilePath = path.join(targetDirectory, targetFileName)
+
+          // Read and copy file content
+          const content = await fs.readFile(sourceFilePath, 'utf-8')
+          await fs.writeFile(targetFilePath, content, 'utf-8')
+
+          debug(`Copied command file: ${commandFile} -> ${targetFileName}`)
+        }
+      }
+
+      debug(`Commands configuration completed in: ${targetDirectory}`)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.warn(`Warning: Failed to process commands configuration: ${errorMessage}`)
     }
   }
 }

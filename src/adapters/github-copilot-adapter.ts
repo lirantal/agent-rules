@@ -1,7 +1,7 @@
 import path from 'node:path'
 import fs from 'node:fs/promises'
 import { debuglog } from 'node:util'
-import { BaseAdapter, type AiAppConfig, type ScaffoldInstructions, type McpConfig } from './base-adapter.js'
+import { BaseAdapter, type AiAppConfig, type ScaffoldInstructions, type McpConfig, type CommandsConfig } from './base-adapter.js'
 
 const debug = debuglog('agent-rules')
 
@@ -24,6 +24,16 @@ export class GitHubCopilotAdapter extends BaseAdapter {
     return {
       filePath: '.vscode/mcp.json',
       mergeKey: 'servers'
+    }
+  }
+
+  /**
+   * Get commands configuration for GitHub Copilot
+   */
+  getCommandsConfig (): CommandsConfig {
+    return {
+      targetDirectory: '.github/prompts',
+      fileNameTransform: (filename: string) => filename.replace('.command.md', '.prompt.md')
     }
   }
 
