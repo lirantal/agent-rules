@@ -52,8 +52,17 @@ npx agent-rules --app cursor --topics secure-code
 # Generate rules for multiple topics
 npx agent-rules --app github-copilot --topics secure-code --topics testing
 
+# Include MCP (Model Context Protocol) configuration
+npx agent-rules --app github-copilot --topics testing --mcp
+
+# Include custom commands (prompts)
+npx agent-rules --app github-copilot --topics secure-code --commands
+
+# Combine multiple features
+npx agent-rules --app github-copilot --topics secure-code --mcp --commands
+
 # Use short flags
-npx agent-rules -a claude-code -t security-vulnerabilities
+npx agent-rules -a claude-code -t security-vulnerabilities -m -c
 
 # Show help
 npx agent-rules --help
@@ -63,6 +72,14 @@ npx agent-rules --version
 ```
 
 #### Available Options
+
+**Flags:**
+- `-a, --app <app>` - AI app to generate rules for
+- `-t, --topics <topics>` - Topics to generate rules for (can be specified multiple times)
+- `-m, --mcp` - Include MCP (Model Context Protocol) server configuration
+- `-c, --commands` - Include custom commands/prompts
+- `-h, --help` - Show help message
+- `-v, --version` - Show version number
 
 **AI Apps:**
 - `github-copilot` - GitHub Copilot
@@ -74,6 +91,33 @@ npx agent-rules --version
 - `secure-code` - Secure coding practices
 - `security-vulnerabilities` - Security vulnerability scanning and fixes
 - `testing` - Testing strategy and guidelines
+
+## Features
+
+### 📋 Instructions & Rules
+
+Scaffold AI-specific coding instructions and best practices rules into your project:
+- Security-focused coding practices
+- Vulnerability detection and remediation
+- Testing strategies and guidelines
+
+### 🔌 MCP (Model Context Protocol) Configuration
+
+Automatically configure MCP servers for enhanced agentic coding capabilities:
+- **GitHub Copilot**: Configures `.vscode/mcp.json`
+- **Gemini CLI**: Configures `.gemini/settings.json`
+- Non-destructive merging with existing configurations
+
+Learn more in the [MCP Feature Documentation](./docs/FEATURE-MCP.md).
+
+### ⚡ Custom Commands & Prompts
+
+Scaffold reusable commands and prompts for your AI coding assistant:
+- **GitHub Copilot**: Deploys to `.github/prompts/` as prompt files
+- Pre-built commands for common workflows (e.g., implementing GitHub issues)
+- Easily extensible with your own custom commands
+
+Learn more in the [Commands Feature Documentation](./docs/FEATURE-COMMANDS.md).
 
 ## Rules
 
