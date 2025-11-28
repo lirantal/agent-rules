@@ -11,7 +11,7 @@ import { AdapterRegistry } from '../adapters/index.js'
 const debug = debuglog('agent-rules')
 
 // Available options for validation
-const AVAILABLE_TOPICS = ['secure-code', 'security-vulnerabilities', 'testing']
+const AVAILABLE_TOPICS = ['secure-code', 'security-vulnerabilities', 'testing', 'nodejs-dev']
 const AVAILABLE_APPS = AdapterRegistry.getSupportedAiApps()
 
 interface CliArgs {
@@ -164,6 +164,7 @@ async function initInteractive () {
   const topicChoices = await multiselect({
     message: 'Which topic do you want to generate agentic rules for?',
     options: [
+      { value: 'nodejs-dev', label: 'Node.js Development', hint: 'General best practices for Node.js application development' },
       { value: 'secure-code', label: 'Secure Coding', hint: 'Apply security best practices for defensive coding in Node.js' },
       { value: 'security-vulnerabilities', label: 'Security Vulnerabilities', hint: 'Scan and fix security vulnerabilities in Node.js application code and 3rd-party dependencies' },
       { value: 'testing', label: 'Testing', hint: 'Establish mature testing strategy and test code guidelines in Node.js applications' },
