@@ -1,5 +1,11 @@
 # agent-rules
 
+## 1.4.1
+
+### Patch Changes
+
+- e9ee281: feat: add Node.js general development rules
+
 ## 1.4.0
 
 ### Minor Changes
