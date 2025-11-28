@@ -1,5 +1,11 @@
 # agent-rules
 
+## 1.4.0
+
+### Minor Changes
+
+- 96e6bec: feat: scaffold custom commands, new Node.js rules, bumps deps
+
 ## 1.3.0
 
 ### Minor Changes
