@@ -1,5 +1,5 @@
 ---
-tools: ['fetch', 'githubRepo', 'runCommands']
+tools: ['edit', 'search', 'runCommands', 'runTasks', 'usages', 'problems', 'changes', 'fetch', 'githubRepo', 'todos']
 agent: 'agent'
 name: 'github-issue-impl'
 description: 'Implement code based on a GitHub issue'
@@ -12,6 +12,7 @@ You will be given an issue number and/or a link to a GitHub issue. You should ac
 - Fetch the issue details using the URL if provided one, or if you are only provided with issue number then you should use the `gh` CLI.
 - If the issue is ambiguous or requires more information, always ask for clarification before proceeding.
 - Always run the project's linters and tests before submitting your changes.
+- You must create a plan for implementing the changes and get confirmation before executing it.
 
 ## Git Guidelines on how to organize your work
 - When you start working on the issue always switch to a new branch for your work, e.g branch name: `docs/issue-123`, `feat/issue-123`, `fix/issue-123`
