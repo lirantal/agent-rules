@@ -1,5 +1,11 @@
 # agent-rules
 
+## 1.4.2
+
+### Patch Changes
+
+- fe0f18c: fix: allow custom command to use workspace IDE tools
+
 ## 1.4.1
 
 ### Patch Changes
