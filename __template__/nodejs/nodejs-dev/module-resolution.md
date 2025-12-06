@@ -30,7 +30,7 @@ Goal: make imports robust, refactor-friendly, and adaptive by using **internal i
     "#db": "./src/database/connection.js"
   }
 }
-````
+```
 
 **Use them in code:**
 
