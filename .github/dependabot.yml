@@ -37,7 +37,7 @@ updates:
       # Development dependencies
       dev-dependencies:
         dependency-type: "development"
-    # example for ignoring dependencies:
-    # ignore:
-    #   - dependency-name: tap
-    #     update-types: ["version-update:semver-major"]
+    # Ignore eslint major version upgrades until neostandard supports eslint v10+
+    ignore:
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
