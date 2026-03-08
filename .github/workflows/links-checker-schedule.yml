@@ -1,6 +1,7 @@
-name: Links Checker (On Schedule)
+name: Links Checker
 
 on:
+  pull_request:
   repository_dispatch:
   workflow_dispatch:
   schedule:
