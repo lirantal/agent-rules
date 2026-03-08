@@ -13,6 +13,7 @@ export default [
     rules: {
       'n/no-process-exit': 'warn',
       'n/no-unsupported-features': 'off',
+      'n/no-unsupported-features/node-builtins': ['error', { ignores: ['util.styleText'] }],
       'n/no-unpublished-require': 'off',
       'security/detect-non-literal-fs-filename': 'off',
       'security/detect-unsafe-regex': 'error',
