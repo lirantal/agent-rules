@@ -3,6 +3,4 @@
 exclude = [
   # npmjs.com returns 403 Forbidden to automated link checkers
   "https://www.npmjs.com/.*",
-  # codecov.io returns 502 Bad Gateway for this repository
-  "https://codecov.io/.*",
 ]
