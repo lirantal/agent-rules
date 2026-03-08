@@ -1,4 +1,3 @@
-[main]
 # Exclude URLs that are known to return non-2xx responses to automated link checkers
 exclude = [
   # npmjs.com returns 403 Forbidden to automated link checkers
