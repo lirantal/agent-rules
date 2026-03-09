@@ -1,6 +1,7 @@
-name: Links Checker (On Schedule)
+name: Links Checker
 
 on:
+  pull_request:
   repository_dispatch:
   workflow_dispatch:
   schedule:
@@ -18,6 +19,8 @@ jobs:
       - name: Link Checker
         id: lychee
         uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2.8.0
+        with:
+          args: --config .github/.lychee.toml .
 
       - name: Create Issue From File
         if: env.lychee_exit_code != 0

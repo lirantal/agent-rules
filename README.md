@@ -19,7 +19,7 @@
 </p>
 
 <div align="center">
-  <img src="https://github.com/lirantal/agent-rules/blob/main/.github/agent-rules-1.png?raw=true" alt="agent-rules logo"/>
+  <img src="https://raw.githubusercontent.com/lirantal/agent-rules/refs/heads/main/.github/agent-rules-1.png" alt="agent-rules logo"/>
 </div>
 
 ## Usage
