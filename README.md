@@ -2,7 +2,8 @@
 
 <p align="center"><h1 align="center">
   agent-rules
-</h1>
+  </h1>
+</p>
 
 <p align="center">
   Rules and instructions for agentic coding tools like Cursor, GitHub Copilot, Claude CLI and Gemini CLI.
