@@ -86,7 +86,7 @@
     "husky": "^9.0.11",
     "lint-staged": "^17.0.5",
     "lockfile-lint": "^5.0.0",
-    "markdownlint-cli": "0.45.0",
+    "markdownlint-cli": "0.48.0",
     "neostandard": "^0.13.0",
     "tsup": "^8.1.0",
     "tsx": "^4.19.4",
