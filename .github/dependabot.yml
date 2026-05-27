@@ -4,12 +4,14 @@ updates:
     directory: ".github/workflows"
     schedule:
       interval: "monthly"
-    cooldown:
-      default-days: 30
     commit-message:
       # Prefix all commit messages with "chore: "
       prefix: "chore"
     open-pull-requests-limit: 10
+    cooldown:
+      default-days: 30
+    # Use the 'dependencies' default label and add
+    # the 'automerge' one for automerge github action support
     labels:
       - "dependencies"
       - "automerge"
@@ -23,10 +25,10 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 10
     cooldown:
-      default-days: 7
-      semver-major-days: 7
-      semver-minor-days: 7
-      semver-patch-days: 7
+      default-days: 30
+      semver-major-days: 30
+      semver-minor-days: 30
+      semver-patch-days: 30
     # Use the 'dependencies' default label and add
     # the 'automerge' one for automerge github action support
     labels:
@@ -47,7 +49,8 @@ updates:
       # Development dependencies
       dev-dependencies:
         dependency-type: "development"
-    # Ignore eslint major version upgrades until neostandard supports eslint v10+
-    ignore:
-      - dependency-name: eslint
-        update-types: ["version-update:semver-major"]
+    # example for ignoring dependencies:
+    # ignore:
+    #   - dependency-name: tap
+    #     update-types: ["version-update:semver-major"]
+
