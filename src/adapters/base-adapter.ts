@@ -94,7 +94,7 @@ export abstract class BaseAdapter {
   async processMcpConfiguration (
     scaffoldInstructions: ScaffoldInstructions,
     resolvedMcpTemplateDirectory: string,
-    resolvedTargetDirectory: string
+    _resolvedTargetDirectory: string
   ): Promise<void> {
     const mcpConfig = this.getMcpConfig()
     if (!mcpConfig) return
@@ -131,7 +131,7 @@ export abstract class BaseAdapter {
       try {
         const existingContent = await fs.readFile(targetMcpFile, 'utf-8')
         existingConfig = JSON.parse(existingContent) as Record<string, unknown>
-      } catch (error) {
+      } catch {
         // File doesn't exist, start with empty config
         debug(`Target MCP file does not exist, creating new one: ${targetMcpFile}`)
       }
@@ -177,7 +177,7 @@ export abstract class BaseAdapter {
   async processCommandsConfiguration (
     scaffoldInstructions: ScaffoldInstructions,
     resolvedCommandsTemplateDirectory: string,
-    resolvedTargetDirectory: string
+    _resolvedTargetDirectory: string
   ): Promise<void> {
     const commandsConfig = this.getCommandsConfig()
     if (!commandsConfig) return

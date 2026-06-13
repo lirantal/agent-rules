@@ -11,7 +11,7 @@ const templateRoot = '__template__'
 // see package.json scripts for the build process but we also want to support
 // running from source in dev `npm run start` where this file lives in src/
 function resolvePackageRootDirectoryForTemplates (): string {
-  let guessedDirName: string = ''
+  let guessedDirName: string
   try {
     if (typeof import.meta !== 'undefined' && import.meta.url) {
       // ESM environment - templates are in dist/__template__
@@ -20,7 +20,7 @@ function resolvePackageRootDirectoryForTemplates (): string {
     } else {
       guessedDirName = __dirname
     }
-  } catch (error) {
+  } catch {
     // CJS fallback - assume we're in a distributed package
     // In CJS, we don't have import.meta, so use __dirname
     guessedDirName = __dirname
@@ -56,7 +56,7 @@ export async function resolveTemplateDirectory (scaffoldInstructions: ScaffoldIn
       throw new Error(`Template directory is not a directory: ${resolvedTemplateDirectory}`)
     }
   } catch (error) {
-    throw new Error(`Template directory not found: ${resolvedTemplateDirectory}`)
+    throw new Error(`Template directory not found: ${resolvedTemplateDirectory}`, { cause: error })
   }
 
   return resolvedTemplateDirectory
@@ -75,7 +75,7 @@ export async function resolveMcpTemplateDirectory (scaffoldInstructions: Scaffol
       throw new Error(`MCP template directory is not a directory: ${resolvedMcpTemplateDirectory}`)
     }
   } catch (error) {
-    throw new Error(`MCP template directory not found: ${resolvedMcpTemplateDirectory}`)
+    throw new Error(`MCP template directory not found: ${resolvedMcpTemplateDirectory}`, { cause: error })
   }
 
   return resolvedMcpTemplateDirectory
@@ -94,7 +94,7 @@ export async function resolveCommandsTemplateDirectory (scaffoldInstructions: Sc
       return null
     }
     return resolvedCommandsTemplateDirectory
-  } catch (error) {
+  } catch {
     // Silently return null if directory doesn't exist
     return null
   }

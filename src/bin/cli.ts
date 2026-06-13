@@ -65,8 +65,8 @@ function parseCommandLineArgs (): CliArgs {
       help: values.help,
       version: values.version
     }
-  } catch (error: any) {
-    console.error('Error parsing command line arguments:', error.message)
+  } catch (error) {
+    console.error('Error parsing command line arguments:', error instanceof Error ? error.message : String(error))
     showHelp()
     // eslint-disable-next-line n/no-process-exit
     process.exit(1)
@@ -277,9 +277,9 @@ async function init () {
 async function main () {
   try {
     await init()
-  } catch (error: any) {
+  } catch (error) {
     debug('Full error details:', error)
-    console.error('\nerror: %s', error.message || error)
+    console.error('\nerror: %s', error instanceof Error ? error.message : error)
     console.error('\n\n😵 Shiver me timbers!\n')
 
     // eslint-disable-next-line n/no-process-exit
