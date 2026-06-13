@@ -1,17 +1,32 @@
+import js from '@eslint/js'
+import { defineConfig, globalIgnores } from 'eslint/config'
+import pluginN from 'eslint-plugin-n'
 import pluginSecurity from 'eslint-plugin-security'
-import neostandard, { resolveIgnoresFromGitignore, plugins } from 'neostandard'
+import tseslint from 'typescript-eslint'
 
-export default [
-  ...neostandard({
-    ignores: resolveIgnoresFromGitignore(),
-    ts: true,   // Enable TypeScript support,
-    filesTs: ['src/**/*.ts', '__tests__/**/*.ts']
-  }),
-  plugins.n.configs['flat/recommended-script'],
+export default defineConfig([
+  globalIgnores([
+    '__tests__/**/*.ts',
+    'dist/**',
+    'coverage/**',
+    'node_modules/**',
+    'apm_modules/**',
+    '.cursor/**',
+    '.devcontainer/**',
+    '.github/**',
+    '.vscode/**',
+    '.gemini/**',
+    '.claude/**',
+    '.agents/**'
+  ]),
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  pluginN.configs['flat/recommended-script'],
   pluginSecurity.configs.recommended,
   {
     rules: {
       'n/no-process-exit': 'warn',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'n/no-unsupported-features': 'off',
       'n/no-unsupported-features/node-builtins': ['error', { ignores: ['util.styleText'] }],
       'n/no-unpublished-require': 'off',
@@ -32,7 +47,7 @@ export default [
     },
     languageOptions: {
       ecmaVersion: 2024,
-      sourceType: 'module',
-    },
-  },
-]
+      sourceType: 'module'
+    }
+  }
+])

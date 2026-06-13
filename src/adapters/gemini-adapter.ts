@@ -169,10 +169,10 @@ export class GeminiAdapter extends BaseAdapter {
     debug('Gemini main file path:', geminiMainFilePath)
 
     // Read existing content or create new content
-    let geminiContent = ''
+    let geminiContent: string
     try {
       geminiContent = await fs.readFile(geminiMainFilePath, 'utf-8')
-    } catch (error) {
+    } catch {
       debug('GEMINI.md not found, creating new file')
       geminiContent = ''
     }

@@ -149,10 +149,10 @@ export class ClaudeCodeAdapter extends BaseAdapter {
     debug('Claude main file path:', claudeMainFilePath)
 
     // Read existing content or create new content
-    let claudeContent = ''
+    let claudeContent: string
     try {
       claudeContent = await fs.readFile(claudeMainFilePath, 'utf-8')
-    } catch (error) {
+    } catch {
       debug('CLAUDE.md not found, creating new file')
       claudeContent = ''
     }
