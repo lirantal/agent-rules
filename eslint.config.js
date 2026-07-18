@@ -30,6 +30,9 @@ export default defineConfig([
       'n/no-unsupported-features': 'off',
       'n/no-unsupported-features/node-builtins': ['error', { ignores: ['util.styleText'] }],
       'n/no-unpublished-require': 'off',
+      'n/no-missing-import': ['error', {
+        typescriptExtensionMap: [['.ts', '.js'], ['.tsx', '.js']]
+      }],
       'security/detect-non-literal-fs-filename': 'off',
       'security/detect-unsafe-regex': 'error',
       'security/detect-buffer-noassert': 'error',
