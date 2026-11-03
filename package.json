@@ -38,7 +38,7 @@
     "build": "tsc && tsup && npm run build:copy-templates",
     "build:copy-templates": "cp -r __template__ dist/",
     "lint": "eslint . && npm run lint:markdown",
-    "lint:markdown": "npx --no-install markdownlint-cli -c .github/.markdownlint.yml -i '.git' -i '__tests__' -i '.github' -i '.changeset' -i 'CODE_OF_CONDUCT.md' -i 'CHANGELOG.md' -i 'docs/**' -i '__template__draft_/**' -i 'node_modules' -i 'dist' -i '__template__' '**/**.md'",
+    "lint:markdown": "npx --no-install markdownlint-cli -c .github/.markdownlint.yml -i '.git' -i '__tests__' -i '.github' -i '.changeset' -i 'CODE_OF_CONDUCT.md' -i 'CHANGELOG.md' -i 'docs/**' -i '__template__draft_/**' -i '**/node_modules/**' -i 'dist' -i '__template__' '**/**.md'",
     "lint:fix": "eslint . --fix",
     "test": "c8 node --import tsx --test __tests__/**/*.test.ts",
     "test:watch": "c8 node --import tsx --test --watch __tests__/**/*.test.ts",
