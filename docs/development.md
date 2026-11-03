@@ -28,3 +28,14 @@ below 6.1. Keep TypeScript on `~6.0.3`; Dependabot defers 6.1 and newer versions
 until the parser supports them. Check the parser's peer dependency range and
 validate installation, lint, build, and tests before widening both constraints.
 Do not bypass peer dependency checks with `--force` or `--legacy-peer-deps`.
+
+## Package-manager pin
+
+Run `bash .github/scripts/setup-npm.sh` from the repository to install the exact
+npm version in `package.json#packageManager`, then install dependencies using
+the existing project setup instructions. CI uses the same setup script.
+
+Upgrade the pin and matching lockfile metadata together in a maintenance PR.
+Choose a release at least 30 days old and run the project checks with it.
+Keep `.npmrc` and `pnpm-workspace.yaml` security policies enabled.
+Periodic upgrade automation is not configured.
